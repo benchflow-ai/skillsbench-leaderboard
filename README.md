@@ -24,11 +24,11 @@ result shape, and leaderboard queries.
 - `green-agent.json5`: SkillsBench green-agent component manifest.
 - `worker.json5`: SkillsBench worker component manifest.
 - `participant-placeholder.json5`: baseline purple participant manifest.
-- `.github/workflows/run-scenario.yml`: maintainer self-run workflow.
-- `.github/workflows/quick-submit.yml`: AgentBeats Quick Submit entrypoint.
-- `.github/workflows/quick-submit-runner.yml`: repo-local runner for the
-  minimal SkillsBench adoption. It preserves the flattened public row contract
-  and prebuilt task-image checks used by the self-run workflow.
+- `.github/workflows/quick-submit.yml`: AgentBeats Quick Submit entrypoint. It
+  calls the official AgentBeats leaderboard template runner required by the live
+  Quick Submit service.
+- `.github/workflows/run-scenario.yml`: maintainer self-run workflow with
+  SkillsBench-specific task-set and result-shape checks.
 - `task_sets/deploy-smoke-v1.json`: canonical five-task task-set manifest.
 - `prebuilt_images/deploy-smoke-v1.json`: digest-pinned task environment images.
 - `queries/*.sql`: DuckDB leaderboard queries. The first column is the
@@ -130,15 +130,14 @@ Quick Submit requirements from AgentBeats:
   scenario under `submissions/*<uuid>*.json`.
 - The workflow retrieves temporary AgentBeats backend secrets through OIDC.
 
-This repo keeps Quick Submit self-contained for the minimal SkillsBench
-adoption:
+This repo uses the official AgentBeats reusable Quick Submit runner:
 
 ```yaml
-uses: ./.github/workflows/quick-submit-runner.yml
+uses: RDI-Foundation/agentbeats-leaderboard-template/.github/workflows/quick-submit-runner.yml@v2
 ```
 
 Local staging already proved that the SkillsBench scenario compiles from
-`submissions/*.json` when manifests use branch-hosted raw GitHub URLs. The live
+`submissions/*.json` when manifests use verified raw GitHub URLs. The live
 AgentBeats green registration points at this repo, and the AgentBeats GitHub App
 is connected for `benchflow-ai/skillsbench-leaderboard`.
 

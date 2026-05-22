@@ -72,6 +72,7 @@
     agentbeats_ids: {
       // Fill these after AgentBeats app registration. Do not use fixture UUIDs.
       skillsbench_green: "",
+      agent: "",
       baseline_agent: "",
     },
     worker_mode: "in_scenario_worker",
