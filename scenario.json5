@@ -38,11 +38,11 @@
     skillsbench_worker: {
       manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/8df54fbe3a719da619945f8cca4e1b15f38c74cf/worker.json5",
       config: {
-        worker_revision: "d14ecf79a38a6d92c69844e69525d49385b6ab2e",
-        skillsbench_revision: "d14ecf79a38a6d92c69844e69525d49385b6ab2e",
+        worker_revision: "7ab0f8bea5144251183c0417a83729ad4a26e481",
+        skillsbench_revision: "7ab0f8bea5144251183c0417a83729ad4a26e481",
         benchflow_revision: "50df6238abf88dc43da7ae8eb4c895f0cc7d40ae",
-        worker_image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:99db2f523254ccb7690aab84a5afd3c91737ecd92f8883cf43cb6fb3861494bb",
-        worker_image_digest: "sha256:99db2f523254ccb7690aab84a5afd3c91737ecd92f8883cf43cb6fb3861494bb",
+        worker_image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4",
+        worker_image_digest: "sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4",
         prebuilt_images: "{\"citation-check\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:8ba4740e9edfe7bb0d071c6e64f788e5652a47fc24fc0e7c74bdb2f896877233\",\"court-form-filling\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:37bdea4e2b901e0a11724a1a6f79b12921349185e490976d7891d7a1cd08a5e8\",\"dialogue-parser\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:c7885a97b18332bb9a5853ab26851a5f0fbeca7d04ef8c1c757ad610f13478e6\",\"offer-letter-generator\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:92a50feb1057ca03680a1fca2c3631651911cf58f735584a7d18c797056ea5b4\",\"powerlifting-coef-calc\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:c2566e89561d86afdaa524798249dee56a0626a9608c9a6dc4e6c626ee6f7954\"}",
         private_proof_dir: "jobs/agentbeats-private-proof",
         private_proof_uri_prefix: "local://agentbeats-private-proof",
