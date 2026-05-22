@@ -51,6 +51,28 @@ The image namespace can be republished under `ghcr.io/benchflow-ai` later, but
 that is not required for the five-task AgentBeats deployment as long as these
 digests remain public.
 
+## Official Self-Run Evidence
+
+The official five-task self-run has completed on this repo's `main` branch:
+
+- workflow run:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/26305709308`
+- workflow commit:
+  `d90627cfa37cf4e73263dc900ca593bf37e6ecbd`
+- submission branch:
+  `submission-benchflow-ai-20260522-185007`
+- merged PR:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/pull/1`
+- result file:
+  `results/benchflow-ai-20260522-185007.json`
+- provenance file:
+  `submissions/benchflow-ai-20260522-185007-provenance.json`
+
+The submitted result contains exactly five flattened public rows for
+`deploy-smoke-v1`, all with `score_eligible: true`,
+`infra_failure_type: null`, and `agent_transport: "a2a"`. The result is merged
+into `main`, so AgentBeats can read it from `results/*.json`.
+
 ## Source Branches
 
 The runtime images were built from branch-scoped source work, not from direct
@@ -98,7 +120,10 @@ uses: ./.github/workflows/quick-submit-runner.yml
 
 Local staging already proved that the SkillsBench scenario compiles from
 `submissions/*.json` when manifests use branch-hosted raw GitHub URLs. Live
-Quick Submit still requires the AgentBeats GitHub App/backend-created PR path.
+Quick Submit still requires the AgentBeats green registration to point at this
+repo and the AgentBeats GitHub App/backend-created PR path. Until AgentBeats
+creates a `quick-submit-<uuid>` PR and backend secret record, the Quick Submit
+runner cannot complete a live submission by design.
 
 ## Leaderboard Queries
 
