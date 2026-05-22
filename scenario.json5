@@ -32,11 +32,11 @@
       },
     },
     skillsbench_green: {
-      manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/764c4771f7291735a74aafee60bbc78be2a52884/green-agent.json5",
+      manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/54f98e9488ad82f3c8f84a8cdf6a2b9edb7dc29b/green-agent.json5",
       config: {},
     },
     skillsbench_worker: {
-      manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/764c4771f7291735a74aafee60bbc78be2a52884/worker.json5",
+      manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/54f98e9488ad82f3c8f84a8cdf6a2b9edb7dc29b/worker.json5",
       config: {
         worker_revision: "sha256:21d157ffd06f06ff38bcd5e56a15d92d958ad88ff7f1db9db1afc5ae90eb0b9a",
         skillsbench_revision: "2812555b",
@@ -53,7 +53,7 @@
       },
     },
     baseline_agent: {
-      manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/764c4771f7291735a74aafee60bbc78be2a52884/participant-placeholder.json5",
+      manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/54f98e9488ad82f3c8f84a8cdf6a2b9edb7dc29b/participant-placeholder.json5",
       config: {},
     },
   },
