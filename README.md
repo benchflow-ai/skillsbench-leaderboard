@@ -1,8 +1,8 @@
 # SkillsBench AgentBeats Leaderboard
 
-Standalone AgentBeats leaderboard repository for the initial five-task
-SkillsBench deployment smoke. This repo is the AgentBeats-facing surface; the
-source SkillsBench and BenchFlow repos remain unchanged on `main`.
+Standalone AgentBeats leaderboard repository for SkillsBench. This repo is the
+AgentBeats-facing surface; the source SkillsBench and BenchFlow repos remain
+unchanged on `main`.
 
 ## Scope
 
@@ -14,9 +14,24 @@ The checked-in scenario defaults to `deploy-smoke-v1`:
 - `offer-letter-generator`
 - `powerlifting-coef-calc`
 
-This is not the full `standard-v1` launch. It is the minimal public deployment
-gate for proving the SkillsBench green agent, worker, A2A participant boundary,
-result shape, and leaderboard queries.
+This remains the minimal public deployment gate for proving the SkillsBench
+green agent, worker, A2A participant boundary, result shape, and leaderboard
+queries.
+
+The broader `standard-v1` artifacts are also staged in fast-prep mode:
+
+- `task_sets/standard-v1.json`: all 94 public direct children of
+  `benchflow-ai/skillsbench:tasks/` at the source revision used for this sync.
+- `prebuilt_images/standard-v1.json`: prepared digest-pinned task environment
+  refs under the shared `ghcr.io/benchflow-ai/skillsbench-task-env` package.
+
+The four `benchflow-ai/skillsbench:tasks_excluded/` tasks are intentionally not
+included in `standard-v1`: `diff-transformer_impl`, `mhc-layer-impl`,
+`scheduling-email-assistant`, and `speaker-diarization-subtitles`.
+
+Fast-prep mode is not full deploy proof. The `standard-v1` JSON files are
+locally contract-checked, but the full 94-image GHCR publish/anonymous digest
+verification and full all-task AgentBeats run are intentionally deferred.
 
 ## Files
 
@@ -30,7 +45,9 @@ result shape, and leaderboard queries.
 - `.github/workflows/run-scenario.yml`: maintainer self-run workflow with
   SkillsBench-specific task-set and result-shape checks.
 - `task_sets/deploy-smoke-v1.json`: canonical five-task task-set manifest.
+- `task_sets/standard-v1.json`: generated full public task-set manifest.
 - `prebuilt_images/deploy-smoke-v1.json`: digest-pinned task environment images.
+- `prebuilt_images/standard-v1.json`: generated full public task-image map.
 - `queries/*.sql`: DuckDB leaderboard queries. The first column is the
   AgentBeats purple-agent UUID.
 - `results/`: merged public result JSON files read by AgentBeats.
@@ -49,8 +66,12 @@ Current public digest-pinned images:
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 
-All five task environment refs are public, digest-pinned entries under the
-shared `ghcr.io/benchflow-ai/skillsbench-task-env` GHCR package.
+The five `deploy-smoke-v1` task environment refs are public, digest-pinned
+entries under the shared `ghcr.io/benchflow-ai/skillsbench-task-env` GHCR
+package. The `standard-v1` image map follows the same shared-package format,
+but full remote digest verification is deferred until the publisher workflow is
+run in batches. The long-term pattern is one shared package with one tag/digest
+per task, not one package per task.
 
 ## Official Self-Run Evidence
 
@@ -102,6 +123,35 @@ changes to official `main` branches:
 
 A2A is the AgentBeats participant protocol boundary. ACP remains BenchFlow's
 coding-agent transport.
+
+## standard-v1 Sync
+
+Full public task-set updates should originate from `benchflow-ai/skillsbench`,
+not manual edits in this repo. The source sync workflow reads `tasks/*/task.toml`,
+skips `tasks_excluded/`, builds or refreshes changed task environment images in
+`ghcr.io/benchflow-ai/skillsbench-task-env`, records digest-pinned refs, and
+opens a reviewable PR here that updates:
+
+- `task_sets/standard-v1.json`
+- `prebuilt_images/standard-v1.json`
+
+The workflow is intentionally PR-based. It must not push generated sync changes
+directly to this repo's `main` branch.
+
+Current fast-prep verification only proves local contract readiness:
+
+- JSON files parse.
+- `task_sets/standard-v1.json` has 94 public tasks.
+- `prebuilt_images/standard-v1.json` has the same 94 task ids.
+- No `tasks_excluded/` ids are present.
+- No active `standard-v1` artifact points at the previous personal GHCR
+  namespace.
+- No full all-task AgentBeats evaluation has been run.
+- No all-image anonymous GHCR verification has been run.
+
+The remaining production gate is to run the publisher/verification path for all
+94 `standard-v1` task image refs, then run an appropriately scoped AgentBeats
+smoke or shard.
 
 ## Self-Run
 
@@ -191,3 +241,6 @@ PY
 - Quick Submit GitHub App connection is approved for
   `benchflow-ai/skillsbench-leaderboard`; rerun a live submit smoke after
   manifest updates.
+- `standard-v1` full adoption remains prepared but not fully verified until the
+  94 task image refs are actually published/verified under
+  `ghcr.io/benchflow-ai/skillsbench-task-env`.
