@@ -1,0 +1,67 @@
+{
+  "manifest_version": "0.1.0",
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "components": {
+    "gateway": {
+      "manifest": "https://raw.githubusercontent.com/RDI-Foundation/agentbeats-gateway/refs/tags/v0.3/amber-manifest.json5",
+      "config": {
+        "assessment_config": {
+          "task_ids": [
+            "citation-check",
+            "court-form-filling",
+            "dialogue-parser",
+            "offer-letter-generator",
+            "powerlifting-coef-calc"
+          ],
+          "task_set": "deploy-smoke-v1",
+          "condition": "with_skills",
+          "allow_excluded_tasks": false,
+          "shard_index": 0,
+          "num_shards": 1
+        },
+        "participant_roles": {
+          "green": "green",
+          "purple1": "agent"
+        },
+        "callback_urls": {}
+      }
+    },
+    "green": {
+      "manifest": "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/764c4771f7291735a74aafee60bbc78be2a52884/green-agent.json5",
+      "config": {}
+    },
+    "agent": {
+      "manifest": "https://raw.githubusercontent.com/Yiminnn/skillsbench-agentbeats/refs/heads/codex/agentbeats-skillsbench-leaderboard/participant-placeholder.json5",
+      "config": {}
+    }
+  },
+  "bindings": [
+    {
+      "to": "#gateway.green",
+      "from": "#green.a2a"
+    },
+    {
+      "to": "#gateway.purple1",
+      "from": "#agent.a2a"
+    },
+    {
+      "to": "#green.proxy",
+      "from": "#gateway.proxy",
+      "weak": true
+    }
+  ],
+  "exports": {
+    "results": "#gateway.results"
+  },
+  "metadata": {
+    "agentbeats_ids": {
+      "green": "019e4ecb-4b5b-7481-b6f4-85ad93336437",
+      "agent": "019e4ed1-d333-7133-807f-5f22c04d5eef"
+    }
+  }
+}
