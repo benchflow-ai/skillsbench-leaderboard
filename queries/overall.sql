@@ -10,7 +10,13 @@ SELECT
   SUM(CASE WHEN row.score_eligible THEN 1 ELSE 0 END) AS "# Tasks",
   SUM(CASE WHEN NOT row.score_eligible OR row.infra_failure_type IS NOT NULL THEN 1 ELSE 0 END) AS "Infra Failed"
 FROM results
-CROSS JOIN UNNEST(results.results) AS rows(row)
+CROSS JOIN UNNEST(results.results) AS outer_rows(outer_row)
+CROSS JOIN UNNEST(
+  CASE
+    WHEN outer_row.results IS NOT NULL THEN outer_row.results
+    ELSE [outer_row]
+  END
+) AS rows(row)
 WHERE status = 'completed'
   AND participants.agent IS NOT NULL
 GROUP BY id
