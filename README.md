@@ -62,9 +62,9 @@ remain cache-only acceleration.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:21d157ffd06f06ff38bcd5e56a15d92d958ad88ff7f1db9db1afc5ae90eb0b9a`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:0469673e53e03b89872d1e5daa241c072c5bbe41d213cc6465e867525200e3b0`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:21d157ffd06f06ff38bcd5e56a15d92d958ad88ff7f1db9db1afc5ae90eb0b9a`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:0469673e53e03b89872d1e5daa241c072c5bbe41d213cc6465e867525200e3b0`
 - purple baseline:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - task environments:
@@ -163,8 +163,9 @@ Current runtime-first verification target:
 - Cache refs are optional and are used only when they resolve.
 - No full all-task AgentBeats evaluation has been run.
 
-The remaining production gate is to build/publish a new runtime-first green
-image from the source branch, then run representative shard smoke checks.
+The runtime-first green/worker image has been built and published from the
+source branch. The remaining production gate is to run representative shard
+smoke checks before switching the live default beyond `deploy-smoke-v1`.
 
 ## Current Deployment State
 
@@ -280,6 +281,7 @@ PY
 - Quick Submit GitHub App connection is approved for
   `benchflow-ai/skillsbench-leaderboard`; rerun a live submit smoke after
   manifest updates.
-- `standard-v1` full adoption remains prepared but not fully verified until the
-  94 task image refs are actually published/verified under
-  `ghcr.io/benchflow-ai/skillsbench-task-env`.
+- `standard-v1` full adoption remains prepared but not fully verified until a
+  representative runtime-first shard smoke passes with the published
+  green/worker image. Full adoption does not require all 94 task environment
+  image refs to be pre-published.
