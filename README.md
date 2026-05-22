@@ -145,6 +145,8 @@ is connected for `benchflow-ai/skillsbench-leaderboard`.
 Live Quick Submit still needs one final smoke after any `main` manifest update:
 submit with the registered purple baseline and verify that AgentBeats creates a
 `quick-submit-<uuid>` PR that runs `.github/workflows/quick-submit.yml`.
+The green agent intentionally exposes no Quick Submit secrets; it uses the
+scenario-bound worker slot and fixed smoke defaults.
 
 ## Leaderboard Queries
 

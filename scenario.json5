@@ -33,11 +33,7 @@
     },
     skillsbench_green: {
       manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/refs/heads/main/green-agent.json5",
-      config: {
-        worker_url: "",
-        worker_timeout_sec: 3600,
-        worker_poll_interval_sec: 1.0,
-      },
+      config: {},
     },
     skillsbench_worker: {
       manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/refs/heads/main/worker.json5",
