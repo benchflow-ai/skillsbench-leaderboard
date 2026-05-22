@@ -62,9 +62,9 @@ remain cache-only acceleration.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:0469673e53e03b89872d1e5daa241c072c5bbe41d213cc6465e867525200e3b0`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:99db2f523254ccb7690aab84a5afd3c91737ecd92f8883cf43cb6fb3861494bb`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:0469673e53e03b89872d1e5daa241c072c5bbe41d213cc6465e867525200e3b0`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:99db2f523254ccb7690aab84a5afd3c91737ecd92f8883cf43cb6fb3861494bb`
 - purple baseline:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - task environments:
