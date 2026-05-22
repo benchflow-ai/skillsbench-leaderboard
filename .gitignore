@@ -1,0 +1,11 @@
+.DS_Store
+docker-compose.yml
+a2a-scenario.toml
+.env
+.env.example
+output/
+.amber-*/
+.amber-*.json
+scenario-ir.json
+patched.json
+provenance.json
