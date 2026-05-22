@@ -4,11 +4,10 @@
   config_schema: {
     type: "object",
     properties: {
-      worker_url: { type: "string" },
-      worker_timeout_sec: { type: "integer", minimum: 1 },
-      worker_poll_interval_sec: { type: "number", minimum: 0 },
+      worker_url: { type: "string", default: "" },
+      worker_timeout_sec: { type: "integer", minimum: 1, default: 3600 },
+      worker_poll_interval_sec: { type: "number", minimum: 0, default: 1.0 },
     },
-    required: ["worker_url", "worker_timeout_sec", "worker_poll_interval_sec"],
     additionalProperties: false,
   },
 
