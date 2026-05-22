@@ -41,15 +41,16 @@ result shape, and leaderboard queries.
 Current public digest-pinned images:
 
 - green:
-  `ghcr.io/yiminnn/skillsbench-agentbeats-green@sha256:6148aab94ee1868157429815e6ceb718f445dce047e07d5081c50f9c75ffe803`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:6148aab94ee1868157429815e6ceb718f445dce047e07d5081c50f9c75ffe803`
 - worker:
-  `ghcr.io/yiminnn/skillsbench-agentbeats-worker@sha256:21d157ffd06f06ff38bcd5e56a15d92d958ad88ff7f1db9db1afc5ae90eb0b9a`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:21d157ffd06f06ff38bcd5e56a15d92d958ad88ff7f1db9db1afc5ae90eb0b9a`
+- purple baseline:
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 
-The image namespace can be republished under `ghcr.io/benchflow-ai` later, but
-that is not required for the five-task AgentBeats deployment as long as these
-digests remain public.
+All five task environment refs are also public, digest-pinned
+`ghcr.io/benchflow-ai` GHCR images.
 
 ## Official Self-Run Evidence
 
@@ -138,24 +139,11 @@ uses: ./.github/workflows/quick-submit-runner.yml
 
 Local staging already proved that the SkillsBench scenario compiles from
 `submissions/*.json` when manifests use branch-hosted raw GitHub URLs. The live
-AgentBeats green registration now points at this repo, but Quick Submit is still
-blocked on GitHub App installation for the `benchflow-ai` organization.
+AgentBeats green registration points at this repo, and the AgentBeats GitHub App
+is connected for `benchflow-ai/skillsbench-leaderboard`.
 
-Observed 2026-05-22 blocker:
-
-- AgentBeats shows `NOT CONNECTED Install the app to accept automated
-  submissions as pull requests. Select benchflow-ai/skillsbench-leaderboard.`
-- GitHub does not allow direct installation from this account; it accepted a
-  scoped request to install `agentbeats.dev` on
-  `benchflow-ai/skillsbench-leaderboard`.
-- `https://agentbeats.dev/Yiminnn/skillsbench-agentbeats/submit` says
-  `Quick submit is unavailable for this leaderboard right now. Make sure the
-  leaderboard repo is connected and the GitHub App is installed.`
-- The live Quick Submit form is visible, but `Submit` is disabled until the app
-  install request is approved and AgentBeats marks the repo connected.
-
-After the org approves the GitHub App request, rerun Quick Submit with the
-registered purple baseline and verify that AgentBeats creates a
+Live Quick Submit still needs one final smoke after any `main` manifest update:
+submit with the registered purple baseline and verify that AgentBeats creates a
 `quick-submit-<uuid>` PR that runs `.github/workflows/quick-submit.yml`.
 
 ## Leaderboard Queries
@@ -198,6 +186,6 @@ PY
   `https://github.com/benchflow-ai/skillsbench-leaderboard`.
 - AgentBeats UI has read commit `4acc96c` and renders overall, category, and
   difficulty leaderboard rows.
-- Quick Submit is blocked only by pending GitHub App installation approval for
-  `benchflow-ai/skillsbench-leaderboard`; the exact UI/GitHub evidence is
-  documented above.
+- Quick Submit GitHub App connection is approved for
+  `benchflow-ai/skillsbench-leaderboard`; rerun a live submit smoke after
+  manifest updates.
