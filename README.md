@@ -26,9 +26,9 @@ result shape, and leaderboard queries.
 - `participant-placeholder.json5`: baseline purple participant manifest.
 - `.github/workflows/run-scenario.yml`: maintainer self-run workflow.
 - `.github/workflows/quick-submit.yml`: AgentBeats Quick Submit entrypoint.
-- `.github/workflows/quick-submit-runner.yml`: repo-local runner copy retained
-  for audit/debugging; Quick Submit is configured to use the same remote
-  template runner style as Terminal-Bench.
+- `.github/workflows/quick-submit-runner.yml`: repo-local runner for the
+  minimal SkillsBench adoption. It preserves the flattened public row contract
+  and prebuilt task-image checks used by the self-run workflow.
 - `task_sets/deploy-smoke-v1.json`: canonical five-task task-set manifest.
 - `prebuilt_images/deploy-smoke-v1.json`: digest-pinned task environment images.
 - `queries/*.sql`: DuckDB leaderboard queries. The first column is the
@@ -89,10 +89,11 @@ Quick Submit requirements from AgentBeats:
   scenario under `submissions/*<uuid>*.json`.
 - The workflow retrieves temporary AgentBeats backend secrets through OIDC.
 
-This repo keeps the same Quick Submit workflow shape as Terminal-Bench:
+This repo keeps Quick Submit self-contained for the minimal SkillsBench
+adoption:
 
 ```yaml
-uses: RDI-Foundation/agentbeats-leaderboard-template/.github/workflows/quick-submit-runner.yml@v2
+uses: ./.github/workflows/quick-submit-runner.yml
 ```
 
 Local staging already proved that the SkillsBench scenario compiles from
