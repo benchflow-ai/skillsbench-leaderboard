@@ -40,17 +40,17 @@ result shape, and leaderboard queries.
 
 Current public digest-pinned images:
 
-- green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:6148aab94ee1868157429815e6ceb718f445dce047e07d5081c50f9c75ffe803`
-- worker:
+- green with embedded worker:
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:21d157ffd06f06ff38bcd5e56a15d92d958ad88ff7f1db9db1afc5ae90eb0b9a`
+- standalone worker:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:21d157ffd06f06ff38bcd5e56a15d92d958ad88ff7f1db9db1afc5ae90eb0b9a`
 - purple baseline:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 
-All five task environment refs are also public, digest-pinned
-`ghcr.io/benchflow-ai` GHCR images.
+All five task environment refs are public, digest-pinned entries under the
+shared `ghcr.io/benchflow-ai/skillsbench-task-env` GHCR package.
 
 ## Official Self-Run Evidence
 
@@ -144,8 +144,8 @@ is connected for `benchflow-ai/skillsbench-leaderboard`.
 Live Quick Submit still needs one final smoke after any `main` manifest update:
 submit with the registered purple baseline and verify that AgentBeats creates a
 `quick-submit-<uuid>` PR that runs `.github/workflows/quick-submit.yml`.
-The green agent intentionally exposes no Quick Submit secrets; it uses the
-scenario-bound worker slot and fixed smoke defaults.
+The green agent intentionally exposes no Quick Submit secrets; it embeds the
+worker process in the same container for the live AgentBeats Quick Submit path.
 
 ## Leaderboard Queries
 
