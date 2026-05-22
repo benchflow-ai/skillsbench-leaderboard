@@ -141,7 +141,7 @@ jobs:
             fi
             task_set_manifest="$(jq -c . "${task_set_path}")"
             prebuilt_path="prebuilt_images/${TASK_SET_INPUT}.json"
-            if [[ -f "${prebuilt_path}" ]]; then
+            if [[ -f "${prebuilt_path}" && "${TASK_SET_INPUT}" != "standard-v1" ]]; then
               jq -e '
                 type == "object" and
                 all(to_entries[]; (.key | type == "string") and (.value | type == "string" and contains("@sha256:")))
@@ -186,7 +186,13 @@ jobs:
              .components.gateway.config.assessment_config.num_shards = $num_shards |
              if $task_set_manifest then
                .components.gateway.config.assessment_config.task_set = $task_set_manifest.task_set |
-               .components.gateway.config.assessment_config.task_ids = ($task_set_manifest.tasks | map(.task_id)) |
+               if $task_set_manifest.task_set == "standard-v1" then
+                 .components.gateway.config.assessment_config.tasks = "all" |
+                 del(.components.gateway.config.assessment_config.task_ids)
+               else
+                 .components.gateway.config.assessment_config.task_ids = ($task_set_manifest.tasks | map(.task_id)) |
+                 del(.components.gateway.config.assessment_config.tasks)
+               end |
                .components.gateway.config.assessment_config.condition = $task_set_manifest.condition |
                .components.gateway.config.assessment_config.allow_excluded_tasks = $task_set_manifest.allow_excluded_tasks
              else . end |
@@ -205,15 +211,6 @@ jobs:
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
              else . end
             ' > patched.json
-          missing_prebuilt_tasks=$(jq -r '
-            (.components.gateway.config.assessment_config.task_ids // []) as $task_ids |
-            (.components.skillsbench_worker.config.prebuilt_images | fromjson) as $prebuilt |
-            [$task_ids[] | select(($prebuilt[.] // "") == "")] | @tsv
-          ' patched.json)
-          if [[ -n "${missing_prebuilt_tasks}" ]]; then
-            echo "prebuilt_images must cover every selected task before public self-run: ${missing_prebuilt_tasks}" >&2
-            exit 1
-          fi
           mv patched.json scenario.json5
 
       - name: Install amber CLI
