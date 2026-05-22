@@ -86,7 +86,7 @@ Live AgentBeats registration status as of 2026-05-22:
 - registered repo and leaderboard repo:
   `https://github.com/benchflow-ai/skillsbench-leaderboard`
 - registered Amber manifest:
-  `https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/refs/heads/main/green-agent.json5`
+  `https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/764c4771f7291735a74aafee60bbc78be2a52884/green-agent.json5`
 
 AgentBeats has read the merged result at commit `4acc96c` and shows
 leaderboard rows for `Yiminnn/skillsbench-baseline-purple` across the overall,
@@ -173,7 +173,8 @@ PY
 
 ## Official Deployment Checklist
 
-- `scenario.json5` on `main` uses this repo's raw manifest URLs.
+- `scenario.json5` on `main` uses this repo's raw manifest URLs pinned to a
+  verified commit.
 - Official `main` self-run succeeds with registered green and purple IDs.
 - Generated result has exactly five public flattened rows.
 - Public rows have `score_eligible: true`, `infra_failure_type: null`, and
