@@ -113,6 +113,20 @@ AgentBeats has read the merged result at commit `4acc96c` and shows
 leaderboard rows for `Yiminnn/skillsbench-baseline-purple` across the overall,
 category, and difficulty query tabs.
 
+Live Quick Submit has also been proven for the current five-task smoke:
+
+- Quick Submit PR:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/pull/3`
+- workflow run:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/26310163922`
+- merged result:
+  `results/019e515b-26ad-7510-983f-f8f9f2db5ac6.json`
+- merged provenance:
+  `submissions/019e515b-26ad-7510-983f-f8f9f2db5ac6-provenance.json`
+
+That run used the official AgentBeats Quick Submit runner and produced five
+score-eligible A2A task rows with no infra failure.
+
 ## Source Branches
 
 The runtime images were built from branch-scoped source work, not from direct
@@ -153,6 +167,31 @@ The remaining production gate is to run the publisher/verification path for all
 94 `standard-v1` task image refs, then run an appropriately scoped AgentBeats
 smoke or shard.
 
+## Current Deployment State
+
+Deploy-ready now:
+
+- `deploy-smoke-v1` five-task AgentBeats adoption.
+- Official Quick Submit path through
+  `RDI-Foundation/agentbeats-leaderboard-template/.github/workflows/quick-submit-runner.yml@v2`.
+- BenchFlow-owned runtime images and the shared five-task task-env package refs.
+- Leaderboard queries for flat and nested AgentBeats result payloads.
+
+Prepared but not fully deploy-verified:
+
+- `standard-v1` task-set manifest with 94 public tasks.
+- `standard-v1` prebuilt image map in shared-package digest-ref format.
+- Source-side sync workflow in `benchflow-ai/skillsbench` that can regenerate
+  manifests, build/publish changed task images, and open a leaderboard PR.
+
+The checked-in `scenario.json5` still includes a separate `skillsbench_worker`
+component and binding. The live Quick Submit path uses `green-agent.json5`,
+where the green component embeds the worker because AgentBeats-generated Quick
+Submit scenarios include gateway + green + purple, not a custom worker
+component. The separate worker in `scenario.json5` is therefore redundant for
+Quick Submit, but remains useful for local/self-run compatibility until a later
+cleanup removes or splits that path.
+
 ## Self-Run
 
 Run the official five-task smoke from `main`:
@@ -186,16 +225,16 @@ This repo uses the official AgentBeats reusable Quick Submit runner:
 uses: RDI-Foundation/agentbeats-leaderboard-template/.github/workflows/quick-submit-runner.yml@v2
 ```
 
-Local staging already proved that the SkillsBench scenario compiles from
-`submissions/*.json` when manifests use verified raw GitHub URLs. The live
-AgentBeats green registration points at this repo, and the AgentBeats GitHub App
-is connected for `benchflow-ai/skillsbench-leaderboard`.
+The live AgentBeats green registration points at this repo, and the AgentBeats
+GitHub App is connected for `benchflow-ai/skillsbench-leaderboard`. Quick
+Submit PR #3 proved that AgentBeats can create a `quick-submit-<uuid>` PR, run
+`.github/workflows/quick-submit.yml`, retrieve temporary backend secrets
+through OIDC, and merge result/provenance. The green agent intentionally
+exposes no Quick Submit secrets; it embeds the worker process in the same
+container for the live AgentBeats Quick Submit path.
 
-Live Quick Submit still needs one final smoke after any `main` manifest update:
-submit with the registered purple baseline and verify that AgentBeats creates a
-`quick-submit-<uuid>` PR that runs `.github/workflows/quick-submit.yml`.
-The green agent intentionally exposes no Quick Submit secrets; it embeds the
-worker process in the same container for the live AgentBeats Quick Submit path.
+Rerun a live submit smoke only after changing the registered component
+manifests or runtime image digests.
 
 ## Leaderboard Queries
 
