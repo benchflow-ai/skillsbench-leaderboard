@@ -182,24 +182,46 @@ jobs:
           fi
           task_set_manifest='null'
           prebuilt_manifest='null'
-          if [[ -n "${TASK_SET_INPUT}" ]]; then
-            if [[ ! "${TASK_SET_INPUT}" =~ ${task_set_re} ]]; then
+          scenario_task_set="$(npx --yes json5 "${SCENARIO_PATH}" | jq -r '.components.gateway.config.assessment_config.task_set // empty')"
+          effective_task_set="${TASK_SET_INPUT:-${scenario_task_set}}"
+          if [[ -n "${effective_task_set}" ]]; then
+            if [[ ! "${effective_task_set}" =~ ${task_set_re} ]]; then
               echo "task_set must be a direct task_sets/*.json manifest name" >&2
               exit 1
             fi
-            task_set_path="task_sets/${TASK_SET_INPUT}.json"
-            if [[ ! -f "${task_set_path}" ]]; then
+            task_set_path="task_sets/${effective_task_set}.json"
+            if [[ -f "${task_set_path}" ]]; then
+              task_set_manifest="$(jq -c . "${task_set_path}")"
+            elif [[ -n "${TASK_SET_INPUT}" ]]; then
               echo "task_set manifest not found: ${task_set_path}" >&2
               exit 1
             fi
-            task_set_manifest="$(jq -c . "${task_set_path}")"
-            prebuilt_path="prebuilt_images/${TASK_SET_INPUT}.json"
-            if [[ -f "${prebuilt_path}" && "${TASK_SET_INPUT}" != "standard-v1" ]]; then
+            prebuilt_path="prebuilt_images/${effective_task_set}.json"
+            if [[ -f "${prebuilt_path}" && "${effective_task_set}" == "standard-v1" ]]; then
               jq -e '
                 type == "object" and
-                all(to_entries[]; (.key | type == "string") and (.value | type == "string" and contains("@sha256:")))
+                all(to_entries[]; (.key | type == "string") and (.value | type == "string" and test("@sha256:[0-9a-fA-F]{64}$")))
               ' "${prebuilt_path}" >/dev/null
+              if [[ -f "${task_set_path}" ]]; then
+                missing_refs="$(jq -nr --slurpfile task_set "${task_set_path}" --slurpfile prebuilt "${prebuilt_path}" '
+                  [
+                    ($task_set[0].tasks // [])[]?.task_id
+                    | select(type == "string")
+                    | . as $task_id
+                    | ($prebuilt[0][$task_id] // "") as $ref
+                    | select(($ref | type != "string") or (($ref | test("@sha256:[0-9a-fA-F]{64}$")) | not))
+                    | $task_id
+                  ] | join(",")
+                ')"
+                if [[ -n "${missing_refs}" ]]; then
+                  echo "prebuilt image map ${prebuilt_path} is missing digest refs for: ${missing_refs}" >&2
+                  exit 1
+                fi
+              fi
               prebuilt_manifest="$(jq -c . "${prebuilt_path}")"
+            elif [[ "${effective_task_set}" == "standard-v1" ]]; then
+              echo "standard-v1 requires a complete prebuilt image map: ${prebuilt_path}" >&2
+              exit 1
             fi
           fi
           if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
@@ -250,13 +272,18 @@ jobs:
                .components.gateway.config.assessment_config.allow_excluded_tasks = $task_set_manifest.allow_excluded_tasks
              else . end |
              if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
-               .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+               .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson) |
+               .components.skillsbench_worker.config.require_prebuilt_images = true
+             elif $prebuilt_manifest and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.prebuilt_images = ($prebuilt_manifest | tojson)
              elif $prebuilt_manifest then
-               error("prebuilt_images require a skillsbench_worker component")
+               error("prebuilt_images require a skillsbench_green or skillsbench_worker component")
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
              if $purple_agent_id != "" then
+               .metadata.agentbeats_ids.agent = $purple_agent_id |
+               .metadata.agentbeats_ids.agent_under_test = $purple_agent_id |
                .metadata.agentbeats_ids.placeholder_agent = $purple_agent_id |
                .components.gateway.config.assessment_config.participant_ids.agent = $purple_agent_id
              else . end |
@@ -466,24 +493,46 @@ jobs:
           fi
           task_set_manifest='null'
           prebuilt_manifest='null'
-          if [[ -n "${TASK_SET_INPUT}" ]]; then
-            if [[ ! "${TASK_SET_INPUT}" =~ ${task_set_re} ]]; then
+          scenario_task_set="$(npx --yes json5 "${SCENARIO_PATH}" | jq -r '.components.gateway.config.assessment_config.task_set // empty')"
+          effective_task_set="${TASK_SET_INPUT:-${scenario_task_set}}"
+          if [[ -n "${effective_task_set}" ]]; then
+            if [[ ! "${effective_task_set}" =~ ${task_set_re} ]]; then
               echo "task_set must be a direct task_sets/*.json manifest name" >&2
               exit 1
             fi
-            task_set_path="task_sets/${TASK_SET_INPUT}.json"
-            if [[ ! -f "${task_set_path}" ]]; then
+            task_set_path="task_sets/${effective_task_set}.json"
+            if [[ -f "${task_set_path}" ]]; then
+              task_set_manifest="$(jq -c . "${task_set_path}")"
+            elif [[ -n "${TASK_SET_INPUT}" ]]; then
               echo "task_set manifest not found: ${task_set_path}" >&2
               exit 1
             fi
-            task_set_manifest="$(jq -c . "${task_set_path}")"
-            prebuilt_path="prebuilt_images/${TASK_SET_INPUT}.json"
-            if [[ -f "${prebuilt_path}" && "${TASK_SET_INPUT}" != "standard-v1" ]]; then
+            prebuilt_path="prebuilt_images/${effective_task_set}.json"
+            if [[ -f "${prebuilt_path}" && "${effective_task_set}" == "standard-v1" ]]; then
               jq -e '
                 type == "object" and
-                all(to_entries[]; (.key | type == "string") and (.value | type == "string" and contains("@sha256:")))
+                all(to_entries[]; (.key | type == "string") and (.value | type == "string" and test("@sha256:[0-9a-fA-F]{64}$")))
               ' "${prebuilt_path}" >/dev/null
+              if [[ -f "${task_set_path}" ]]; then
+                missing_refs="$(jq -nr --slurpfile task_set "${task_set_path}" --slurpfile prebuilt "${prebuilt_path}" '
+                  [
+                    ($task_set[0].tasks // [])[]?.task_id
+                    | select(type == "string")
+                    | . as $task_id
+                    | ($prebuilt[0][$task_id] // "") as $ref
+                    | select(($ref | type != "string") or (($ref | test("@sha256:[0-9a-fA-F]{64}$")) | not))
+                    | $task_id
+                  ] | join(",")
+                ')"
+                if [[ -n "${missing_refs}" ]]; then
+                  echo "prebuilt image map ${prebuilt_path} is missing digest refs for: ${missing_refs}" >&2
+                  exit 1
+                fi
+              fi
               prebuilt_manifest="$(jq -c . "${prebuilt_path}")"
+            elif [[ "${effective_task_set}" == "standard-v1" ]]; then
+              echo "standard-v1 requires a complete prebuilt image map: ${prebuilt_path}" >&2
+              exit 1
             fi
           fi
           if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
@@ -532,13 +581,18 @@ jobs:
                .components.gateway.config.assessment_config.allow_excluded_tasks = $task_set_manifest.allow_excluded_tasks
              else . end |
              if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
-               .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+               .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson) |
+               .components.skillsbench_worker.config.require_prebuilt_images = true
+             elif $prebuilt_manifest and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.prebuilt_images = ($prebuilt_manifest | tojson)
              elif $prebuilt_manifest then
-               error("prebuilt_images require a skillsbench_worker component")
+               error("prebuilt_images require a skillsbench_green or skillsbench_worker component")
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
              if $purple_agent_id != "" then
+               .metadata.agentbeats_ids.agent = $purple_agent_id |
+               .metadata.agentbeats_ids.agent_under_test = $purple_agent_id |
                .metadata.agentbeats_ids.placeholder_agent = $purple_agent_id |
                .components.gateway.config.assessment_config.participant_ids.agent = $purple_agent_id
              else . end |

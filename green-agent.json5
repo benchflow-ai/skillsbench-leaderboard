@@ -4,7 +4,12 @@
 
   config_schema: {
     type: "object",
-    properties: {},
+    properties: {
+      prebuilt_images: {
+        type: "string",
+        description: "Optional JSON object mapping task id to digest-pinned prebuilt task environment image.",
+      },
+    },
     additionalProperties: false,
   },
 
@@ -27,12 +32,18 @@
       SKILLSBENCH_WORKER_IMAGE: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef",
       SKILLSBENCH_WORKER_IMAGE_DIGEST: "sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef",
       SKILLSBENCH_WORKER_PREBUILT_IMAGES: "{\"citation-check\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:8ba4740e9edfe7bb0d071c6e64f788e5652a47fc24fc0e7c74bdb2f896877233\",\"court-form-filling\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:37bdea4e2b901e0a11724a1a6f79b12921349185e490976d7891d7a1cd08a5e8\",\"dialogue-parser\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:c7885a97b18332bb9a5853ab26851a5f0fbeca7d04ef8c1c757ad610f13478e6\",\"offer-letter-generator\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:92a50feb1057ca03680a1fca2c3631651911cf58f735584a7d18c797056ea5b4\",\"powerlifting-coef-calc\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:c2566e89561d86afdaa524798249dee56a0626a9608c9a6dc4e6c626ee6f7954\"}",
+      SKILLSBENCH_WORKER_PREBUILT_IMAGES_OVERRIDE: {
+        when: "config.prebuilt_images",
+        value: "${config.prebuilt_images}",
+      },
       SKILLSBENCH_WORKER_VERIFY_PREBUILT_IMAGES: "true",
+      SKILLSBENCH_WORKER_REQUIRE_PREBUILT_IMAGES: "true",
       SKILLSBENCH_PRIVATE_PROOF_DIR: "jobs/agentbeats-private-proof",
       SKILLSBENCH_PRIVATE_PROOF_URI_PREFIX: "local://agentbeats-private-proof",
       SKILLSBENCH_PRIVATE_PROOF_RETENTION: "github-actions-smoke-debug-only",
       SKILLSBENCH_REQUIRE_DURABLE_PRIVATE_PROOF: "false",
       BENCHFLOW_DOCKER_LOGS_HOST_MOUNTED: "false",
+      BENCHFLOW_DOCKER_SAFE_CLEANUP: "true",
       DOCKER_BUILDKIT: "0",
       COMPOSE_DOCKER_CLI_BUILD: "0",
       SKILLSBENCH_WORKER_PARTICIPANT_PROXY_URL: "${slots.proxy.url}",
