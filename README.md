@@ -43,9 +43,18 @@ remain cache-only acceleration.
 - `green-agent.json5`: SkillsBench green-agent component manifest.
 - `worker.json5`: SkillsBench worker component manifest.
 - `participant-placeholder.json5`: baseline purple participant manifest.
+- `participant-agent-under-test.json5`: generic configurable purple
+  agent-under-test manifest. Current supported config is `harness:
+  "openhands"`, `model: "gemini/gemini-3.5-flash"`, `api_key`, and
+  `timeout_sec`.
+- `scenario-agent-under-test-smoke.json5`: separate one-task
+  `dialogue-parser` real-model smoke scenario for the generic purple image.
 - `.github/workflows/quick-submit.yml`: AgentBeats Quick Submit entrypoint. It
   calls the official AgentBeats leaderboard template runner required by the live
   Quick Submit service.
+- `.github/workflows/run-agent-under-test-smoke.yml`: maintainer one-task smoke
+  for proving the configurable purple image without changing the default
+  five-task deployment smoke.
 - `.github/workflows/run-scenario.yml`: maintainer self-run workflow with
   SkillsBench-specific task-set and result-shape checks.
 - `task_sets/deploy-smoke-v1.json`: canonical five-task task-set manifest.
@@ -67,6 +76,8 @@ Current public digest-pinned images:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4`
 - purple baseline:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
+- purple agent-under-test:
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:174df6cfeb506ea3a78856773c828785515571e29b2a10acb9cbea8f7dfbb9e1`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 

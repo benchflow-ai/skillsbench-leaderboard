@@ -41,9 +41,14 @@ on:
         description: "Durable private proof retention policy (for example, 90d)"
         default: ""
         type: string
+      scenario_path:
+        description: "Scenario JSON5 path to run"
+        default: "scenario.json5"
+        type: string
 
 env:
   NUM_SHARDS: ${{ inputs.num_shards || '1' }}
+  SCENARIO_PATH: ${{ inputs.scenario_path || 'scenario.json5' }}
 
 jobs:
   setup:
@@ -105,6 +110,26 @@ jobs:
           echo "$SECRETS_JSON" | jq -r \
             'to_entries[] | select(.key != "GITHUB_TOKEN") | "AMBER_CONFIG_\(.key | ascii_upcase)=\(.value | sub("\\s+$";""))"' \
             >> "${GITHUB_ENV}"
+
+      - name: Export agent-under-test secret alias
+        if: inputs.scenario_path == 'scenario-agent-under-test-smoke.json5'
+        env:
+          AGENT_UNDER_TEST_API_KEY: ${{ secrets.AGENT_UNDER_TEST__API_KEY || secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${AGENT_UNDER_TEST_API_KEY}" ]]; then
+            echo "Missing repo secret AGENT_UNDER_TEST__API_KEY or GEMINI_API_KEY" >&2
+            exit 1
+          fi
+          echo "::add-mask::${AGENT_UNDER_TEST_API_KEY}"
+          {
+            echo "AMBER_CONFIG_AGENT_UNDER_TEST__API_KEY<<__AGENT_UNDER_TEST_KEY__"
+            printf '%s\n' "${AGENT_UNDER_TEST_API_KEY}"
+            echo "__AGENT_UNDER_TEST_KEY__"
+            echo "AMBER_CONFIG_AGENT_UNDER_TEST__HARNESS=openhands"
+            echo "AMBER_CONFIG_AGENT_UNDER_TEST__MODEL=gemini/gemini-3.5-flash"
+            echo "AMBER_CONFIG_AGENT_UNDER_TEST__TIMEOUT_SEC=900"
+          } >> "${GITHUB_ENV}"
 
       - name: Patch shard config into scenario
         env:
@@ -170,7 +195,7 @@ jobs:
             echo "private proof overrides require require_durable_private_proof=true" >&2
             exit 1
           fi
-          npx json5 scenario.json5 | jq \
+          npx json5 "${SCENARIO_PATH}" | jq \
             --argjson shard_index ${{ matrix.shard_index }} \
             --argjson num_shards ${NUM_SHARDS} \
             --argjson num_instances '${{ inputs.num_instances || 'null' }}' \
@@ -211,7 +236,7 @@ jobs:
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
              else . end
             ' > patched.json
-          mv patched.json scenario.json5
+          mv patched.json "${SCENARIO_PATH}"
 
       - name: Install amber CLI
         shell: bash
@@ -232,7 +257,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf "${AMBER_COMPOSE_DIR}"
-          amber compile scenario.json5 \
+          amber compile "${SCENARIO_PATH}" \
             --output scenario-ir.json \
             --docker-compose "${AMBER_COMPOSE_DIR}"
           if ! jq -e '.exports[] | select(.name == "results" and .capability.kind == "http")' scenario-ir.json > /dev/null; then
@@ -448,7 +473,7 @@ jobs:
             echo "private proof overrides require require_durable_private_proof=true" >&2
             exit 1
           fi
-          npx json5 scenario.json5 | jq \
+          npx json5 "${SCENARIO_PATH}" | jq \
             --argjson task_set_manifest "${task_set_manifest}" \
             --argjson prebuilt_manifest "${prebuilt_manifest}" \
             --arg green_agent_id "${GREEN_AGENT_ID}" \

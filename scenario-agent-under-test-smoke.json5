@@ -1,0 +1,103 @@
+{
+  manifest_version: "0.4.0",
+  experimental_features: ["docker"],
+
+  config_schema: {
+    type: "object",
+    properties: {
+      agent_under_test: {
+        type: "object",
+        properties: {
+          harness: {
+            type: "string",
+            enum: ["openhands"],
+            default: "openhands",
+          },
+          api_key: {
+            type: "string",
+            secret: true,
+          },
+          model: {
+            type: "string",
+            default: "gemini/gemini-3.5-flash",
+          },
+          timeout_sec: {
+            type: "integer",
+            default: 900,
+          },
+        },
+        required: ["api_key"],
+        additionalProperties: false,
+      },
+    },
+    required: ["agent_under_test"],
+    additionalProperties: false,
+  },
+
+  components: {
+    gateway: {
+      manifest: "https://raw.githubusercontent.com/RDI-Foundation/agentbeats-gateway/refs/tags/v0.3/amber-manifest.json5",
+      config: {
+        assessment_config: {
+          task_ids: ["dialogue-parser"],
+          task_set: "agentbeats-real-model-smoke-v1",
+          condition: "with_skills",
+          allow_excluded_tasks: false,
+          shard_index: 0,
+          num_shards: 1,
+        },
+        participant_roles: { green: "skillsbench_green", purple1: "agent" },
+      },
+    },
+    skillsbench_green: {
+      manifest: "./green-agent.json5",
+      config: {},
+    },
+    skillsbench_worker: {
+      manifest: "./worker.json5",
+      config: {
+        worker_revision: "7ab0f8bea5144251183c0417a83729ad4a26e481",
+        skillsbench_revision: "7ab0f8bea5144251183c0417a83729ad4a26e481",
+        benchflow_revision: "50df6238abf88dc43da7ae8eb4c895f0cc7d40ae",
+        worker_image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4",
+        worker_image_digest: "sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4",
+        prebuilt_images: "{\"dialogue-parser\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:c7885a97b18332bb9a5853ab26851a5f0fbeca7d04ef8c1c757ad610f13478e6\"}",
+        private_proof_dir: "jobs/agentbeats-private-proof",
+        private_proof_uri_prefix: "local://agentbeats-private-proof",
+        private_proof_retention: "github-actions-real-model-smoke-debug-only",
+        require_durable_private_proof: false,
+        jobs_dir: "jobs/agentbeats-worker-agent-under-test",
+        environment: "docker",
+      },
+    },
+    agent_under_test: {
+      manifest: "./participant-agent-under-test.json5",
+      config: {
+        harness: "${config.agent_under_test.harness}",
+        api_key: "${config.agent_under_test.api_key}",
+        model: "${config.agent_under_test.model}",
+        timeout_sec: "${config.agent_under_test.timeout_sec}",
+      },
+    },
+  },
+
+  bindings: [
+    { to: "#gateway.green", from: "#skillsbench_green.a2a" },
+    { to: "#gateway.purple1", from: "#agent_under_test.a2a" },
+    { to: "#skillsbench_green.proxy", from: "#gateway.proxy", weak: true },
+    { to: "#skillsbench_green.worker", from: "#skillsbench_worker.http" },
+    { to: "#skillsbench_worker.proxy", from: "#gateway.proxy", weak: true },
+  ],
+
+  exports: { results: "#gateway.results" },
+
+  metadata: {
+    agentbeats_ids: {
+      skillsbench_green: "",
+      agent: "",
+      agent_under_test: "",
+    },
+    worker_mode: "in_scenario_worker",
+    smoke_task: "dialogue-parser",
+  },
+}
