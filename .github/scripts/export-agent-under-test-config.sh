@@ -23,6 +23,10 @@ provider_from_model() {
   local provider="${model%%/*}"
   provider="${provider%%:*}"
   provider="$(printf '%s' "${provider}" | tr '[:upper:]' '[:lower:]')"
+  if [[ "${provider}" == gemini-* ]]; then
+    echo "gemini"
+    return 0
+  fi
   case "${provider}" in
     google) echo "gemini" ;;
     claude) echo "anthropic" ;;
@@ -55,12 +59,12 @@ provider_key_names() {
 }
 
 agent_harness="${AGENT_HARNESS:-openhands}"
-agent_model="${AGENT_MODEL:-gemini/gemini-3.5-flash}"
+agent_model="${AGENT_MODEL:-gemini/gemini-3.1-flash-lite-preview}"
 agent_timeout_sec="${AGENT_TIMEOUT_SEC:-900}"
 selected_key="${AGENT_UNDER_TEST_API_KEY:-}"
+provider="$(provider_from_model "${agent_model}")"
 
 if [[ -z "${selected_key}" ]]; then
-  provider="$(provider_from_model "${agent_model}")"
   for name in $(provider_key_names "${provider}"); do
     candidate="${!name:-}"
     if [[ -n "${candidate}" ]]; then
@@ -78,5 +82,6 @@ fi
 {
   echo "AMBER_CONFIG_AGENT_UNDER_TEST__HARNESS=${agent_harness}"
   echo "AMBER_CONFIG_AGENT_UNDER_TEST__MODEL=${agent_model}"
+  echo "AMBER_CONFIG_AGENT_UNDER_TEST__PROVIDER=${provider}"
   echo "AMBER_CONFIG_AGENT_UNDER_TEST__TIMEOUT_SEC=${agent_timeout_sec}"
 } >> "${GITHUB_ENV}"
