@@ -72,15 +72,15 @@ public Quick Submit must not call Docker build for the 94-task set.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:987cb9caaee3321fa6fb9f3343169e72bed9d66831dbb7c63b15ef3a92f62f59`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:54d55c74c5411d18bedbd55376e59bda17e6205d927344bdb074c6f8c3683f05`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:987cb9caaee3321fa6fb9f3343169e72bed9d66831dbb7c63b15ef3a92f62f59`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:54d55c74c5411d18bedbd55376e59bda17e6205d927344bdb074c6f8c3683f05`
 - standalone green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:0600d4a05121d7732520d80fcf84dff70477b4056bba93628d63d55aab310410`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:9e661530fe4cc9d330e1069a89197860bb52bf1f29a635b9ab2f6f3ec872e595`
 - purple placeholder:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:a4416f5644f54088ff76d4a7baa6b98feaeb51294d289b0ca0044b3e5df4cca4`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:81d2e5c6cca6a97d4842df91ad3193f37142702823d6a24197ecff2d7f1a6536`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 
