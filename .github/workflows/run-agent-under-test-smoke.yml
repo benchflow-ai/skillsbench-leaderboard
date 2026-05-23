@@ -15,6 +15,18 @@ on:
         description: "Timeout while waiting for the one-task result"
         default: "90"
         type: string
+      agent_harness:
+        description: "Agent-under-test harness"
+        default: "openhands"
+        type: string
+      agent_model:
+        description: "Agent-under-test model"
+        default: "gemini/gemini-3.5-flash"
+        type: string
+      agent_timeout_sec:
+        description: "Agent-under-test timeout in seconds"
+        default: "900"
+        type: string
 
 jobs:
   dialogue-parser:
@@ -43,21 +55,69 @@ jobs:
 
       - name: Export agent-under-test secret for Amber
         env:
-          AGENT_UNDER_TEST_API_KEY: ${{ secrets.AGENT_UNDER_TEST__API_KEY || secrets.GEMINI_API_KEY }}
+          AGENT_UNDER_TEST_API_KEY: ${{ secrets.AGENT_UNDER_TEST__API_KEY || '' }}
+          OPENAI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENAI_API_KEY || secrets.OPENAI_API_KEY || '' }}
+          ANTHROPIC_API_KEY: ${{ secrets.AGENT_UNDER_TEST__ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY || '' }}
+          GEMINI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__GEMINI_API_KEY || secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY || '' }}
+          OPENROUTER_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENROUTER_API_KEY || secrets.OPENROUTER_API_KEY || '' }}
+          QWEN_API_KEY: ${{ secrets.AGENT_UNDER_TEST__QWEN_API_KEY || secrets.QWEN_API_KEY || secrets.DASHSCOPE_API_KEY || '' }}
+          DEEPSEEK_API_KEY: ${{ secrets.AGENT_UNDER_TEST__DEEPSEEK_API_KEY || secrets.DEEPSEEK_API_KEY || '' }}
+          MINIMAX_API_KEY: ${{ secrets.AGENT_UNDER_TEST__MINIMAX_API_KEY || secrets.MINIMAX_API_KEY || '' }}
+          GLM_API_KEY: ${{ secrets.AGENT_UNDER_TEST__GLM_API_KEY || secrets.GLM_API_KEY || secrets.ZAI_API_KEY || '' }}
+          KIMI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__KIMI_API_KEY || secrets.KIMI_API_KEY || secrets.MOONSHOT_API_KEY || '' }}
+          XIAOMI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__XIAOMI_API_KEY || secrets.XIAOMI_API_KEY || '' }}
+          DOUBAO_API_KEY: ${{ secrets.AGENT_UNDER_TEST__DOUBAO_API_KEY || secrets.DOUBAO_API_KEY || secrets.ARK_API_KEY || '' }}
+          HUNYUAN_API_KEY: ${{ secrets.AGENT_UNDER_TEST__HUNYUAN_API_KEY || secrets.HUNYUAN_API_KEY || '' }}
+          AGENT_HARNESS: ${{ inputs.agent_harness || 'openhands' }}
+          AGENT_MODEL: ${{ inputs.agent_model || 'gemini/gemini-3.5-flash' }}
+          AGENT_TIMEOUT_SEC: ${{ inputs.agent_timeout_sec || '900' }}
         run: |
           set -euo pipefail
-          if [[ -z "${AGENT_UNDER_TEST_API_KEY}" ]]; then
-            echo "Missing repo secret AGENT_UNDER_TEST__API_KEY or GEMINI_API_KEY" >&2
+          export_secret() {
+            local name="$1"
+            local value="$2"
+            if [[ -z "${value}" ]]; then
+              return 1
+            fi
+            echo "::add-mask::${value}"
+            {
+              echo "AMBER_CONFIG_AGENT_UNDER_TEST__${name}<<__AGENT_UNDER_TEST_${name}__"
+              printf '%s\n' "${value}"
+              echo "__AGENT_UNDER_TEST_${name}__"
+            } >> "${GITHUB_ENV}"
+            return 0
+          }
+
+          has_key=0
+          selected_key=""
+          for candidate in \
+            "${AGENT_UNDER_TEST_API_KEY}" \
+            "${GEMINI_API_KEY}" \
+            "${OPENAI_API_KEY}" \
+            "${ANTHROPIC_API_KEY}" \
+            "${OPENROUTER_API_KEY}" \
+            "${QWEN_API_KEY}" \
+            "${DEEPSEEK_API_KEY}" \
+            "${MINIMAX_API_KEY}" \
+            "${GLM_API_KEY}" \
+            "${KIMI_API_KEY}" \
+            "${XIAOMI_API_KEY}" \
+            "${DOUBAO_API_KEY}" \
+            "${HUNYUAN_API_KEY}"; do
+            if [[ -n "${candidate}" ]]; then
+              selected_key="${candidate}"
+              break
+            fi
+          done
+          export_secret API_KEY "${selected_key}" && has_key=1 || true
+          if [[ "${has_key}" == "0" ]]; then
+            echo "Missing agent-under-test API secret. Set AGENT_UNDER_TEST__API_KEY or a provider secret such as GEMINI_API_KEY." >&2
             exit 1
           fi
-          echo "::add-mask::${AGENT_UNDER_TEST_API_KEY}"
           {
-            echo "AMBER_CONFIG_AGENT_UNDER_TEST__API_KEY<<__AGENT_UNDER_TEST_KEY__"
-            printf '%s\n' "${AGENT_UNDER_TEST_API_KEY}"
-            echo "__AGENT_UNDER_TEST_KEY__"
-            echo "AMBER_CONFIG_AGENT_UNDER_TEST__HARNESS=openhands"
-            echo "AMBER_CONFIG_AGENT_UNDER_TEST__MODEL=gemini/gemini-3.5-flash"
-            echo "AMBER_CONFIG_AGENT_UNDER_TEST__TIMEOUT_SEC=900"
+            echo "AMBER_CONFIG_AGENT_UNDER_TEST__HARNESS=${AGENT_HARNESS}"
+            echo "AMBER_CONFIG_AGENT_UNDER_TEST__MODEL=${AGENT_MODEL}"
+            echo "AMBER_CONFIG_AGENT_UNDER_TEST__TIMEOUT_SEC=${AGENT_TIMEOUT_SEC}"
           } >> "${GITHUB_ENV}"
 
       - name: Patch optional AgentBeats IDs

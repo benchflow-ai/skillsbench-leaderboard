@@ -44,11 +44,12 @@ remain cache-only acceleration.
 - `worker.json5`: SkillsBench worker component manifest.
 - `participant-placeholder.json5`: baseline purple participant manifest.
 - `participant-agent-under-test.json5`: generic configurable purple
-  agent-under-test manifest. Current supported config is `harness:
-  "openhands"`, `model: "gemini/gemini-3.5-flash"`, `api_key`, and
-  `timeout_sec`.
+  agent-under-test manifest. It is one image with config-selected harness,
+  model, provider, base URL, timeout, and secret fields.
 - `scenario-agent-under-test-smoke.json5`: separate one-task
   `dialogue-parser` real-model smoke scenario for the generic purple image.
+- `scenario-standard-v1.json5`: branch full-mode scenario for all public
+  `standard-v1` tasks using runtime-first task builds and seven shards.
 - `.github/workflows/quick-submit.yml`: AgentBeats Quick Submit entrypoint. It
   calls the official AgentBeats leaderboard template runner required by the live
   Quick Submit service.
@@ -71,13 +72,15 @@ remain cache-only acceleration.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef`
+- standalone green:
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:dddaea2c67983ab19168c6c5803d7ce3f3334d27ff4d912a0e35f175673c7323`
 - purple baseline:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:174df6cfeb506ea3a78856773c828785515571e29b2a10acb9cbea8f7dfbb9e1`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0c89ac9dab29e23ed3975d66f648158b43efdb044fcbeb17032f3eea344b3c9a`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 
@@ -147,6 +150,7 @@ The runtime images were built from branch-scoped source work, not from direct
 changes to official `main` branches:
 
 - `benchflow-ai/skillsbench:codex/agentbeats-green-agent-runtime`
+- `benchflow-ai/skillsbench:codex/agentbeats-seven-agent-standard-v1`
 - `benchflow-ai/benchflow:codex/agentbeats-a2a-adapter-audit`
 
 A2A is the AgentBeats participant protocol boundary. ACP remains BenchFlow's
@@ -195,6 +199,11 @@ Prepared but not fully deploy-verified:
   "standard-v1"`, deterministic sharding, and cache-optional task startup.
 - Optional `standard-v1` prebuilt image cache map in shared-package digest-ref
   format.
+- Generic purple agent-under-test support for `openhands`, `opencode`,
+  `claude-code`, `codex`, `gemini-cli`, `terminus`, and `pi` in one image.
+- `scenario-standard-v1.json5` as the branch-only full-mode scenario. It omits
+  the 94-image cache map by default so runtime builds from the baked task tree
+  remain the correctness path.
 
 The checked-in `scenario.json5` still includes a separate `skillsbench_worker`
 component and binding. The live Quick Submit path uses `green-agent.json5`,
@@ -236,6 +245,10 @@ This repo uses the official AgentBeats reusable Quick Submit runner:
 ```yaml
 uses: RDI-Foundation/agentbeats-leaderboard-template/.github/workflows/quick-submit-runner.yml@v2
 ```
+
+The branch full-mode path sets Quick Submit to seven shards, matching the
+Terminal-Bench-style pattern for larger task sets. The default checked-in
+`scenario.json5` remains the five-task deployment smoke.
 
 The live AgentBeats green registration points at this repo, and the AgentBeats
 GitHub App is connected for `benchflow-ai/skillsbench-leaderboard`. Quick
