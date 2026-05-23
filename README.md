@@ -80,7 +80,7 @@ Current public digest-pinned images:
 - purple baseline:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0c89ac9dab29e23ed3975d66f648158b43efdb044fcbeb17032f3eea344b3c9a`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:9c88e419fdac47201ffce1765403b785bbf6262cba3bb26182b1abfb0155ff38`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 

@@ -174,30 +174,38 @@ jobs:
             return 0
           }
 
+          provider="${AGENT_MODEL%%/*}"
+          provider="${provider%%:*}"
+          provider="${provider,,}"
+          case "${provider}" in
+            google|gemini) provider_keys=(GEMINI_API_KEY) ;;
+            anthropic|claude) provider_keys=(ANTHROPIC_API_KEY) ;;
+            openai|gpt) provider_keys=(OPENAI_API_KEY) ;;
+            openrouter) provider_keys=(OPENROUTER_API_KEY) ;;
+            qwen|dashscope) provider_keys=(QWEN_API_KEY) ;;
+            deepseek) provider_keys=(DEEPSEEK_API_KEY) ;;
+            minimax) provider_keys=(MINIMAX_API_KEY) ;;
+            glm|zai) provider_keys=(GLM_API_KEY) ;;
+            kimi|moonshot) provider_keys=(KIMI_API_KEY) ;;
+            xiaomi|mimo) provider_keys=(XIAOMI_API_KEY) ;;
+            doubao) provider_keys=(DOUBAO_API_KEY) ;;
+            hunyuan|hy3) provider_keys=(HUNYUAN_API_KEY) ;;
+            *) provider_keys=() ;;
+          esac
+          selected_key="${AGENT_UNDER_TEST_API_KEY}"
+          if [[ -z "${selected_key}" ]]; then
+            for name in "${provider_keys[@]}"; do
+              candidate="${!name:-}"
+              if [[ -n "${candidate}" ]]; then
+                selected_key="${candidate}"
+                break
+              fi
+            done
+          fi
           has_key=0
-          selected_key=""
-          for candidate in \
-            "${AGENT_UNDER_TEST_API_KEY}" \
-            "${GEMINI_API_KEY}" \
-            "${OPENAI_API_KEY}" \
-            "${ANTHROPIC_API_KEY}" \
-            "${OPENROUTER_API_KEY}" \
-            "${QWEN_API_KEY}" \
-            "${DEEPSEEK_API_KEY}" \
-            "${MINIMAX_API_KEY}" \
-            "${GLM_API_KEY}" \
-            "${KIMI_API_KEY}" \
-            "${XIAOMI_API_KEY}" \
-            "${DOUBAO_API_KEY}" \
-            "${HUNYUAN_API_KEY}"; do
-            if [[ -n "${candidate}" ]]; then
-              selected_key="${candidate}"
-              break
-            fi
-          done
           export_secret API_KEY "${selected_key}" && has_key=1 || true
           if [[ "${has_key}" == "0" ]]; then
-            echo "Missing agent-under-test API secret. Set AGENT_UNDER_TEST__API_KEY or a provider secret such as GEMINI_API_KEY." >&2
+            echo "Missing agent-under-test API secret for model '${AGENT_MODEL}'. Set AGENT_UNDER_TEST__API_KEY or the matching provider secret." >&2
             exit 1
           fi
           {
@@ -296,8 +304,10 @@ jobs:
                .components.gateway.config.assessment_config.condition = $task_set_manifest.condition |
                .components.gateway.config.assessment_config.allow_excluded_tasks = $task_set_manifest.allow_excluded_tasks
              else . end |
-             if $prebuilt_manifest then
+             if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+             elif $prebuilt_manifest then
+               error("prebuilt_images require a skillsbench_worker component")
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
@@ -305,10 +315,12 @@ jobs:
                .metadata.agentbeats_ids.baseline_agent = $purple_agent_id |
                .components.gateway.config.assessment_config.participant_ids.agent = $purple_agent_id
              else . end |
-             if $require_durable_private_proof then
+             if $require_durable_private_proof and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.require_durable_private_proof = true |
                .components.skillsbench_worker.config.private_proof_uri_prefix = $private_proof_uri_prefix |
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
+             elif $require_durable_private_proof then
+               error("durable private proof requires a skillsbench_worker component")
              else . end
             ' > patched.json
           mv patched.json "${SCENARIO_PATH}"
@@ -551,6 +563,8 @@ jobs:
             exit 1
           fi
           npx json5 "${SCENARIO_PATH}" | jq \
+            --argjson num_shards ${NUM_SHARDS} \
+            --argjson num_instances '${{ inputs.num_instances || 'null' }}' \
             --argjson task_set_manifest "${task_set_manifest}" \
             --argjson prebuilt_manifest "${prebuilt_manifest}" \
             --arg green_agent_id "${GREEN_AGENT_ID}" \
@@ -559,6 +573,7 @@ jobs:
             --arg private_proof_uri_prefix "${PRIVATE_PROOF_URI_PREFIX}" \
             --arg private_proof_retention "${PRIVATE_PROOF_RETENTION}" \
             '
+             .components.gateway.config.assessment_config.num_shards = $num_shards |
              if $task_set_manifest then
                .components.gateway.config.assessment_config.task_set = $task_set_manifest.task_set |
                if $task_set_manifest.task_set == "standard-v1" then
@@ -571,18 +586,23 @@ jobs:
                .components.gateway.config.assessment_config.condition = $task_set_manifest.condition |
                .components.gateway.config.assessment_config.allow_excluded_tasks = $task_set_manifest.allow_excluded_tasks
              else . end |
-             if $prebuilt_manifest then
+             if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+             elif $prebuilt_manifest then
+               error("prebuilt_images require a skillsbench_worker component")
              else . end |
+             if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
              if $purple_agent_id != "" then
                .metadata.agentbeats_ids.baseline_agent = $purple_agent_id |
                .components.gateway.config.assessment_config.participant_ids.agent = $purple_agent_id
              else . end |
-             if $require_durable_private_proof then
+             if $require_durable_private_proof and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.require_durable_private_proof = true |
                .components.skillsbench_worker.config.private_proof_uri_prefix = $private_proof_uri_prefix |
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
+             elif $require_durable_private_proof then
+               error("durable private proof requires a skillsbench_worker component")
              else . end
             ' > submission-scenario.json5
 

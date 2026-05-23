@@ -13,7 +13,9 @@ jobs:
       id-token: write
       contents: write
     with:
-      num_shards: 7
+      # Keep the default five-task smoke path single-shard. Full standard-v1
+      # submissions must carry their own num_shards value in the scenario.
+      num_shards: 1
     # Optional: bind leaderboard-repo secrets into the green agent during Quick Submit.
     # This is fully opt-in.
     # Pass one explicit secret payload to the reusable workflow. Construct it inline from only

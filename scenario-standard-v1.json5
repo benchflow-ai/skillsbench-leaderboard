@@ -52,22 +52,6 @@
       manifest: "./green-agent.json5",
       config: {},
     },
-    skillsbench_worker: {
-      manifest: "./worker.json5",
-      config: {
-        worker_revision: "d5b00898638c9d8d537f527d8715a2732c808408",
-        skillsbench_revision: "d5b00898638c9d8d537f527d8715a2732c808408",
-        benchflow_revision: "50df6238abf88dc43da7ae8eb4c895f0cc7d40ae",
-        worker_image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef",
-        worker_image_digest: "sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef",
-        private_proof_dir: "jobs/agentbeats-private-proof",
-        private_proof_uri_prefix: "local://agentbeats-private-proof",
-        private_proof_retention: "github-actions-standard-v1-branch-debug-only",
-        require_durable_private_proof: false,
-        jobs_dir: "jobs/agentbeats-worker-standard-v1",
-        environment: "docker",
-      },
-    },
     agent_under_test: {
       manifest: "./participant-agent-under-test.json5",
       config: {
@@ -83,8 +67,6 @@
     { to: "#gateway.green", from: "#skillsbench_green.a2a" },
     { to: "#gateway.purple1", from: "#agent_under_test.a2a" },
     { to: "#skillsbench_green.proxy", from: "#gateway.proxy", weak: true },
-    { to: "#skillsbench_green.worker", from: "#skillsbench_worker.http" },
-    { to: "#skillsbench_worker.proxy", from: "#gateway.proxy", weak: true },
   ],
 
   exports: { results: "#gateway.results" },
@@ -95,7 +77,7 @@
       agent: "",
       agent_under_test: "",
     },
-    worker_mode: "in_scenario_worker",
+    worker_mode: "embedded_green_worker",
     task_set: "standard-v1",
     runtime_first: true,
     num_shards: 7,
