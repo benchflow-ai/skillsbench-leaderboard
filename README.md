@@ -80,7 +80,7 @@ Current public digest-pinned images:
 - purple baseline:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:9c88e419fdac47201ffce1765403b785bbf6262cba3bb26182b1abfb0155ff38`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:61ccbf890d6ca59665524704e7308161d709e2ebfeaf8ea9f5ff297c06eb7599`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 
@@ -246,9 +246,10 @@ This repo uses the official AgentBeats reusable Quick Submit runner:
 uses: RDI-Foundation/agentbeats-leaderboard-template/.github/workflows/quick-submit-runner.yml@v2
 ```
 
-The branch full-mode path sets Quick Submit to seven shards, matching the
-Terminal-Bench-style pattern for larger task sets. The default checked-in
-`scenario.json5` remains the five-task deployment smoke.
+The checked-in Quick Submit workflow keeps the default five-task deployment
+smoke at one shard. Standard-v1 full-mode scenarios must carry their own
+`num_shards: 7` assessment config, matching the Terminal-Bench-style pattern for
+larger task sets.
 
 The live AgentBeats green registration points at this repo, and the AgentBeats
 GitHub App is connected for `benchflow-ai/skillsbench-leaderboard`. Quick

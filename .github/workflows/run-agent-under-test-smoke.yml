@@ -71,62 +71,7 @@ jobs:
           AGENT_HARNESS: ${{ inputs.agent_harness || 'openhands' }}
           AGENT_MODEL: ${{ inputs.agent_model || 'gemini/gemini-3.5-flash' }}
           AGENT_TIMEOUT_SEC: ${{ inputs.agent_timeout_sec || '900' }}
-        run: |
-          set -euo pipefail
-          export_secret() {
-            local name="$1"
-            local value="$2"
-            if [[ -z "${value}" ]]; then
-              return 1
-            fi
-            echo "::add-mask::${value}"
-            {
-              echo "AMBER_CONFIG_AGENT_UNDER_TEST__${name}<<__AGENT_UNDER_TEST_${name}__"
-              printf '%s\n' "${value}"
-              echo "__AGENT_UNDER_TEST_${name}__"
-            } >> "${GITHUB_ENV}"
-            return 0
-          }
-
-          provider="${AGENT_MODEL%%/*}"
-          provider="${provider%%:*}"
-          provider="${provider,,}"
-          case "${provider}" in
-            google|gemini) provider_keys=(GEMINI_API_KEY) ;;
-            anthropic|claude) provider_keys=(ANTHROPIC_API_KEY) ;;
-            openai|gpt) provider_keys=(OPENAI_API_KEY) ;;
-            openrouter) provider_keys=(OPENROUTER_API_KEY) ;;
-            qwen|dashscope) provider_keys=(QWEN_API_KEY) ;;
-            deepseek) provider_keys=(DEEPSEEK_API_KEY) ;;
-            minimax) provider_keys=(MINIMAX_API_KEY) ;;
-            glm|zai) provider_keys=(GLM_API_KEY) ;;
-            kimi|moonshot) provider_keys=(KIMI_API_KEY) ;;
-            xiaomi|mimo) provider_keys=(XIAOMI_API_KEY) ;;
-            doubao) provider_keys=(DOUBAO_API_KEY) ;;
-            hunyuan|hy3) provider_keys=(HUNYUAN_API_KEY) ;;
-            *) provider_keys=() ;;
-          esac
-          selected_key="${AGENT_UNDER_TEST_API_KEY}"
-          if [[ -z "${selected_key}" ]]; then
-            for name in "${provider_keys[@]}"; do
-              candidate="${!name:-}"
-              if [[ -n "${candidate}" ]]; then
-                selected_key="${candidate}"
-                break
-              fi
-            done
-          fi
-          has_key=0
-          export_secret API_KEY "${selected_key}" && has_key=1 || true
-          if [[ "${has_key}" == "0" ]]; then
-            echo "Missing agent-under-test API secret for model '${AGENT_MODEL}'. Set AGENT_UNDER_TEST__API_KEY or the matching provider secret." >&2
-            exit 1
-          fi
-          {
-            echo "AMBER_CONFIG_AGENT_UNDER_TEST__HARNESS=${AGENT_HARNESS}"
-            echo "AMBER_CONFIG_AGENT_UNDER_TEST__MODEL=${AGENT_MODEL}"
-            echo "AMBER_CONFIG_AGENT_UNDER_TEST__TIMEOUT_SEC=${AGENT_TIMEOUT_SEC}"
-          } >> "${GITHUB_ENV}"
+        run: .github/scripts/export-agent-under-test-config.sh
 
       - name: Patch optional AgentBeats IDs
         env:
