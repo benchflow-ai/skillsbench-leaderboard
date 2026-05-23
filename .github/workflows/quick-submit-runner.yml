@@ -552,7 +552,7 @@ jobs:
             shard_results+=("$f")
           done
           # Extract the registered purple AgentBeats ID from submission metadata.
-          participants=$(jq -c '{agent: (.metadata.agentbeats_ids.baseline_agent // .metadata.agentbeats_ids.agent // "")}' "${SCENARIO_PATH}")
+          participants=$(jq -c '{agent: (.metadata.agentbeats_ids.placeholder_agent // .metadata.agentbeats_ids.agent // "")}' "${SCENARIO_PATH}")
           jq -s --argjson participants "$participants" '{
             status: (if all(.[]; .status == "completed") then "completed"
                     elif any(.[]; .status == "completed") then "partial"

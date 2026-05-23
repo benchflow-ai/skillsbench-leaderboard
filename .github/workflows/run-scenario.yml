@@ -202,7 +202,7 @@ jobs:
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
              if $purple_agent_id != "" then
-               .metadata.agentbeats_ids.baseline_agent = $purple_agent_id |
+               .metadata.agentbeats_ids.placeholder_agent = $purple_agent_id |
                .components.gateway.config.assessment_config.participant_ids.agent = $purple_agent_id
              else . end |
              if $require_durable_private_proof then
@@ -468,7 +468,7 @@ jobs:
              else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
              if $purple_agent_id != "" then
-               .metadata.agentbeats_ids.baseline_agent = $purple_agent_id |
+               .metadata.agentbeats_ids.placeholder_agent = $purple_agent_id |
                .components.gateway.config.assessment_config.participant_ids.agent = $purple_agent_id
              else . end |
              if $require_durable_private_proof then
@@ -499,7 +499,7 @@ jobs:
             shard_results+=("$f")
           done
           # Extract the registered purple AgentBeats ID from scenario metadata.
-          participants=$(npx json5 submission-scenario.json5 | jq -c '{agent: (.metadata.agentbeats_ids.baseline_agent // .metadata.agentbeats_ids.agent // "")}')
+          participants=$(npx json5 submission-scenario.json5 | jq -c '{agent: (.metadata.agentbeats_ids.placeholder_agent // .metadata.agentbeats_ids.agent // "")}')
           jq -s --argjson participants "$participants" '{
             status: (if all(.[]; .status == "completed") then "completed"
                     elif any(.[]; .status == "completed") then "partial"

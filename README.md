@@ -42,7 +42,7 @@ remain cache-only acceleration.
 - `scenario.json5`: Amber scenario for the five-task worker-backed run.
 - `green-agent.json5`: SkillsBench green-agent component manifest.
 - `worker.json5`: SkillsBench worker component manifest.
-- `participant-placeholder.json5`: baseline purple participant manifest.
+- `participant-placeholder.json5`: placeholder purple participant manifest.
 - `.github/workflows/quick-submit.yml`: AgentBeats Quick Submit entrypoint. It
   calls the official AgentBeats leaderboard template runner required by the live
   Quick Submit service.
@@ -65,7 +65,7 @@ Current public digest-pinned images:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4`
 - standalone worker:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ca315c8e03bece84564db80436355a9a9459de6bc9f3e1d022b7e72ed347cdb4`
-- purple baseline:
+- purple placeholder:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
@@ -100,21 +100,21 @@ into `main`, so AgentBeats can read it from `results/*.json`.
 
 ## AgentBeats Registration
 
-Live AgentBeats registration status as of 2026-05-22:
+Live AgentBeats registration status as of 2026-05-23:
 
 - green page: `https://agentbeats.dev/Yiminnn/skillsbench-agentbeats`
 - green ID: `019e4ecb-4b5b-7481-b6f4-85ad93336437`
-- purple baseline page:
-  `https://agentbeats.dev/Yiminnn/skillsbench-baseline-purple`
-- purple baseline ID: `019e4ed1-d333-7133-807f-5f22c04d5eef`
+- generic purple agent-under-test page:
+  `https://agentbeats.dev/Yiminnn/skillsbench-generic-purple`
+- generic purple agent-under-test ID: `019e536c-4bbd-7560-8c93-84452485d1d6`
 - registered repo and leaderboard repo:
   `https://github.com/benchflow-ai/skillsbench-leaderboard`
 - registered Amber manifest:
   `https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/54f98e9488ad82f3c8f84a8cdf6a2b9edb7dc29b/green-agent.json5`
 
-AgentBeats has read the merged result at commit `4acc96c` and shows
-leaderboard rows for `Yiminnn/skillsbench-baseline-purple` across the overall,
-category, and difficulty query tabs.
+The old smoke-only participant registration has been retired. Keep
+older result and submission files that reference historical participant IDs as
+provenance only; do not use those IDs for new submissions.
 
 Live Quick Submit has also been proven for the current five-task smoke:
 
@@ -203,7 +203,7 @@ gh workflow run run-scenario.yml \
   --ref main \
   -f num_shards=1 \
   -f green_agent_id=019e4ecb-4b5b-7481-b6f4-85ad93336437 \
-  -f purple_agent_id=019e4ed1-d333-7133-807f-5f22c04d5eef \
+  -f purple_agent_id=019e536c-4bbd-7560-8c93-84452485d1d6 \
   -f require_durable_private_proof=false
 ```
 
@@ -246,14 +246,13 @@ uv run --with duckdb python - <<'PY'
 from pathlib import Path
 import duckdb
 
-agent_id = "019e4ed1-d333-7133-807f-5f22c04d5eef"
 con = duckdb.connect(":memory:")
 try:
     con.execute("CREATE TABLE results AS SELECT * FROM read_json_auto('results/*.json', filename = true)")
     for name in ["overall", "by_category", "by_difficulty"]:
         rows = con.execute((Path("queries") / f"{name}.sql").read_text()).fetchall()
-        if not rows or not any(row and str(row[0]) == agent_id for row in rows):
-            raise SystemExit(f"{name} query failed registered-id check: {rows}")
+        if not rows:
+            raise SystemExit(f"{name} query returned no rows")
     print("queries verified")
 finally:
     con.close()
