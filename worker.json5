@@ -24,7 +24,6 @@
       "benchflow_revision",
       "worker_image",
       "worker_image_digest",
-      "prebuilt_images",
       "private_proof_dir",
       "private_proof_uri_prefix",
       "private_proof_retention",
@@ -40,7 +39,7 @@
   },
 
   program: {
-    image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:21d157ffd06f06ff38bcd5e56a15d92d958ad88ff7f1db9db1afc5ae90eb0b9a",
+    image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef",
     entrypoint: [
       "uv",
       "run",
@@ -63,7 +62,11 @@
       BENCHFLOW_REVISION: "${config.benchflow_revision}",
       SKILLSBENCH_WORKER_IMAGE: "${config.worker_image}",
       SKILLSBENCH_WORKER_IMAGE_DIGEST: "${config.worker_image_digest}",
-      SKILLSBENCH_WORKER_PREBUILT_IMAGES: "${config.prebuilt_images}",
+      SKILLSBENCH_WORKER_PREBUILT_IMAGES: {
+        when: "config.prebuilt_images",
+        value: "${config.prebuilt_images}",
+      },
+      SKILLSBENCH_WORKER_VERIFY_PREBUILT_IMAGES: "true",
       SKILLSBENCH_PRIVATE_PROOF_DIR: "${config.private_proof_dir}",
       SKILLSBENCH_PRIVATE_PROOF_URI_PREFIX: "${config.private_proof_uri_prefix}",
       SKILLSBENCH_PRIVATE_PROOF_RETENTION: "${config.private_proof_retention}",

@@ -10,8 +10,8 @@ on:
   workflow_dispatch:
     inputs:
       num_shards:
-        description: "Number of parallel shards"
-        default: "1"
+        description: "Number of parallel shards (empty keeps scenario default)"
+        default: ""
         type: string
       num_instances:
         description: "Total number of task instances to run across all shards (empty = all)"
@@ -41,22 +41,52 @@ on:
         description: "Durable private proof retention policy (for example, 90d)"
         default: ""
         type: string
+      scenario_path:
+        description: "Scenario JSON5 path to run"
+        default: "scenario.json5"
+        type: string
+      agent_harness:
+        description: "Agent-under-test harness for agent-under-test scenarios"
+        default: "openhands"
+        type: string
+      agent_model:
+        description: "Agent-under-test model for agent-under-test scenarios"
+        default: "gemini/gemini-3.5-flash"
+        type: string
+      agent_timeout_sec:
+        description: "Agent-under-test timeout in seconds"
+        default: "900"
+        type: string
 
 env:
-  NUM_SHARDS: ${{ inputs.num_shards || '1' }}
+  SCENARIO_PATH: ${{ inputs.scenario_path || 'scenario.json5' }}
 
 jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
       shard_indices: ${{ steps.gen.outputs.shard_indices }}
+      num_shards: ${{ steps.gen.outputs.num_shards }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Generate shard matrix
         id: gen
-        run: echo "shard_indices=$(seq 0 $(( ${{ inputs.num_shards || '1' }} - 1 )) | jq -sc .)" >> "$GITHUB_OUTPUT"
+        env:
+          NUM_SHARDS_INPUT: ${{ inputs.num_shards || '' }}
+        run: |
+          set -euo pipefail
+          num_shards="${NUM_SHARDS_INPUT}"
+          if [[ -z "${num_shards}" ]]; then
+            num_shards="$(npx --yes json5 "${SCENARIO_PATH}" | jq -r '.components.gateway.config.assessment_config.num_shards // 1')"
+          fi
+          if [[ ! "${num_shards}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "num_shards must be a positive integer" >&2
+            exit 1
+          fi
+          echo "num_shards=${num_shards}" >> "$GITHUB_OUTPUT"
+          echo "shard_indices=$(seq 0 $(( num_shards - 1 )) | jq -sc .)" >> "$GITHUB_OUTPUT"
 
   eval:
     needs: setup
@@ -71,6 +101,7 @@ jobs:
       contents: read
 
     env:
+      NUM_SHARDS: ${{ needs.setup.outputs.num_shards }}
       AMBER_IMAGE: ghcr.io/rdi-foundation/amber-cli:v0.3
       AMBER_COMPOSE_DIR: amber-compose
       AMBER_COMPOSE_PROJECT: amber-scenario-${{ github.run_id }}-${{ github.run_attempt }}-shard-${{ matrix.shard_index }}
@@ -102,9 +133,31 @@ jobs:
           # Secret names should match the scenario config_schema path with double
           # underscores as separators, e.g. a secret named FOO__BAR maps to
           # config.foo.bar in the scenario.
+          # Agent-under-test secrets are normalized in the dedicated alias step.
           echo "$SECRETS_JSON" | jq -r \
-            'to_entries[] | select(.key != "GITHUB_TOKEN") | "AMBER_CONFIG_\(.key | ascii_upcase)=\(.value | sub("\\s+$";""))"' \
+            'to_entries[] | select(.key != "GITHUB_TOKEN" and (.key | startswith("AGENT_UNDER_TEST__") | not)) | "AMBER_CONFIG_\(.key | ascii_upcase)=\(.value | sub("\\s+$";""))"' \
             >> "${GITHUB_ENV}"
+
+      - name: Export agent-under-test secret alias
+        if: inputs.scenario_path == 'scenario-agent-under-test-smoke.json5' || inputs.scenario_path == 'scenario-standard-v1.json5'
+        env:
+          AGENT_UNDER_TEST_API_KEY: ${{ secrets.AGENT_UNDER_TEST__API_KEY || '' }}
+          OPENAI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENAI_API_KEY || secrets.OPENAI_API_KEY || '' }}
+          ANTHROPIC_API_KEY: ${{ secrets.AGENT_UNDER_TEST__ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY || '' }}
+          GEMINI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__GEMINI_API_KEY || secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY || '' }}
+          OPENROUTER_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENROUTER_API_KEY || secrets.OPENROUTER_API_KEY || '' }}
+          QWEN_API_KEY: ${{ secrets.AGENT_UNDER_TEST__QWEN_API_KEY || secrets.QWEN_API_KEY || secrets.DASHSCOPE_API_KEY || '' }}
+          DEEPSEEK_API_KEY: ${{ secrets.AGENT_UNDER_TEST__DEEPSEEK_API_KEY || secrets.DEEPSEEK_API_KEY || '' }}
+          MINIMAX_API_KEY: ${{ secrets.AGENT_UNDER_TEST__MINIMAX_API_KEY || secrets.MINIMAX_API_KEY || '' }}
+          GLM_API_KEY: ${{ secrets.AGENT_UNDER_TEST__GLM_API_KEY || secrets.GLM_API_KEY || secrets.ZAI_API_KEY || '' }}
+          KIMI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__KIMI_API_KEY || secrets.KIMI_API_KEY || secrets.MOONSHOT_API_KEY || '' }}
+          XIAOMI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__XIAOMI_API_KEY || secrets.XIAOMI_API_KEY || '' }}
+          DOUBAO_API_KEY: ${{ secrets.AGENT_UNDER_TEST__DOUBAO_API_KEY || secrets.DOUBAO_API_KEY || secrets.ARK_API_KEY || '' }}
+          HUNYUAN_API_KEY: ${{ secrets.AGENT_UNDER_TEST__HUNYUAN_API_KEY || secrets.HUNYUAN_API_KEY || '' }}
+          AGENT_HARNESS: ${{ inputs.agent_harness || 'openhands' }}
+          AGENT_MODEL: ${{ inputs.agent_model || 'gemini/gemini-3.5-flash' }}
+          AGENT_TIMEOUT_SEC: ${{ inputs.agent_timeout_sec || '900' }}
+        run: .github/scripts/export-agent-under-test-config.sh
 
       - name: Patch shard config into scenario
         env:
@@ -141,7 +194,7 @@ jobs:
             fi
             task_set_manifest="$(jq -c . "${task_set_path}")"
             prebuilt_path="prebuilt_images/${TASK_SET_INPUT}.json"
-            if [[ -f "${prebuilt_path}" ]]; then
+            if [[ -f "${prebuilt_path}" && "${TASK_SET_INPUT}" != "standard-v1" ]]; then
               jq -e '
                 type == "object" and
                 all(to_entries[]; (.key | type == "string") and (.value | type == "string" and contains("@sha256:")))
@@ -170,7 +223,7 @@ jobs:
             echo "private proof overrides require require_durable_private_proof=true" >&2
             exit 1
           fi
-          npx json5 scenario.json5 | jq \
+          npx json5 "${SCENARIO_PATH}" | jq \
             --argjson shard_index ${{ matrix.shard_index }} \
             --argjson num_shards ${NUM_SHARDS} \
             --argjson num_instances '${{ inputs.num_instances || 'null' }}' \
@@ -186,12 +239,20 @@ jobs:
              .components.gateway.config.assessment_config.num_shards = $num_shards |
              if $task_set_manifest then
                .components.gateway.config.assessment_config.task_set = $task_set_manifest.task_set |
-               .components.gateway.config.assessment_config.task_ids = ($task_set_manifest.tasks | map(.task_id)) |
+               if $task_set_manifest.task_set == "standard-v1" then
+                 .components.gateway.config.assessment_config.tasks = "all" |
+                 del(.components.gateway.config.assessment_config.task_ids)
+               else
+                 .components.gateway.config.assessment_config.task_ids = ($task_set_manifest.tasks | map(.task_id)) |
+                 del(.components.gateway.config.assessment_config.tasks)
+               end |
                .components.gateway.config.assessment_config.condition = $task_set_manifest.condition |
                .components.gateway.config.assessment_config.allow_excluded_tasks = $task_set_manifest.allow_excluded_tasks
              else . end |
-             if $prebuilt_manifest then
+             if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+             elif $prebuilt_manifest then
+               error("prebuilt_images require a skillsbench_worker component")
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
@@ -199,22 +260,15 @@ jobs:
                .metadata.agentbeats_ids.baseline_agent = $purple_agent_id |
                .components.gateway.config.assessment_config.participant_ids.agent = $purple_agent_id
              else . end |
-             if $require_durable_private_proof then
+             if $require_durable_private_proof and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.require_durable_private_proof = true |
                .components.skillsbench_worker.config.private_proof_uri_prefix = $private_proof_uri_prefix |
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
+             elif $require_durable_private_proof then
+               error("durable private proof requires a skillsbench_worker component")
              else . end
             ' > patched.json
-          missing_prebuilt_tasks=$(jq -r '
-            (.components.gateway.config.assessment_config.task_ids // []) as $task_ids |
-            (.components.skillsbench_worker.config.prebuilt_images | fromjson) as $prebuilt |
-            [$task_ids[] | select(($prebuilt[.] // "") == "")] | @tsv
-          ' patched.json)
-          if [[ -n "${missing_prebuilt_tasks}" ]]; then
-            echo "prebuilt_images must cover every selected task before public self-run: ${missing_prebuilt_tasks}" >&2
-            exit 1
-          fi
-          mv patched.json scenario.json5
+          mv patched.json "${SCENARIO_PATH}"
 
       - name: Install amber CLI
         shell: bash
@@ -235,7 +289,7 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf "${AMBER_COMPOSE_DIR}"
-          amber compile scenario.json5 \
+          amber compile "${SCENARIO_PATH}" \
             --output scenario-ir.json \
             --docker-compose "${AMBER_COMPOSE_DIR}"
           if ! jq -e '.exports[] | select(.name == "results" and .capability.kind == "http")' scenario-ir.json > /dev/null; then
@@ -375,6 +429,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      NUM_SHARDS: ${{ needs.setup.outputs.num_shards }}
     defaults:
       run:
         shell: bash
@@ -422,7 +478,7 @@ jobs:
             fi
             task_set_manifest="$(jq -c . "${task_set_path}")"
             prebuilt_path="prebuilt_images/${TASK_SET_INPUT}.json"
-            if [[ -f "${prebuilt_path}" ]]; then
+            if [[ -f "${prebuilt_path}" && "${TASK_SET_INPUT}" != "standard-v1" ]]; then
               jq -e '
                 type == "object" and
                 all(to_entries[]; (.key | type == "string") and (.value | type == "string" and contains("@sha256:")))
@@ -451,7 +507,9 @@ jobs:
             echo "private proof overrides require require_durable_private_proof=true" >&2
             exit 1
           fi
-          npx json5 scenario.json5 | jq \
+          npx json5 "${SCENARIO_PATH}" | jq \
+            --argjson num_shards ${NUM_SHARDS} \
+            --argjson num_instances '${{ inputs.num_instances || 'null' }}' \
             --argjson task_set_manifest "${task_set_manifest}" \
             --argjson prebuilt_manifest "${prebuilt_manifest}" \
             --arg green_agent_id "${GREEN_AGENT_ID}" \
@@ -460,24 +518,36 @@ jobs:
             --arg private_proof_uri_prefix "${PRIVATE_PROOF_URI_PREFIX}" \
             --arg private_proof_retention "${PRIVATE_PROOF_RETENTION}" \
             '
+             .components.gateway.config.assessment_config.num_shards = $num_shards |
              if $task_set_manifest then
                .components.gateway.config.assessment_config.task_set = $task_set_manifest.task_set |
-               .components.gateway.config.assessment_config.task_ids = ($task_set_manifest.tasks | map(.task_id)) |
+               if $task_set_manifest.task_set == "standard-v1" then
+                 .components.gateway.config.assessment_config.tasks = "all" |
+                 del(.components.gateway.config.assessment_config.task_ids)
+               else
+                 .components.gateway.config.assessment_config.task_ids = ($task_set_manifest.tasks | map(.task_id)) |
+                 del(.components.gateway.config.assessment_config.tasks)
+               end |
                .components.gateway.config.assessment_config.condition = $task_set_manifest.condition |
                .components.gateway.config.assessment_config.allow_excluded_tasks = $task_set_manifest.allow_excluded_tasks
              else . end |
-             if $prebuilt_manifest then
+             if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+             elif $prebuilt_manifest then
+               error("prebuilt_images require a skillsbench_worker component")
              else . end |
+             if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
              if $purple_agent_id != "" then
                .metadata.agentbeats_ids.baseline_agent = $purple_agent_id |
                .components.gateway.config.assessment_config.participant_ids.agent = $purple_agent_id
              else . end |
-             if $require_durable_private_proof then
+             if $require_durable_private_proof and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.require_durable_private_proof = true |
                .components.skillsbench_worker.config.private_proof_uri_prefix = $private_proof_uri_prefix |
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
+             elif $require_durable_private_proof then
+               error("durable private proof requires a skillsbench_worker component")
              else . end
             ' > submission-scenario.json5
 
