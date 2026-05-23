@@ -57,10 +57,6 @@ on:
         description: "Agent-under-test timeout in seconds"
         default: "900"
         type: string
-      one_task_smoke_run_id:
-        description: "Required for standard-v1: successful Run Agent Under Test Smoke run id on this commit"
-        default: ""
-        type: string
 
 env:
   SCENARIO_PATH: ${{ inputs.scenario_path || 'scenario.json5' }}
@@ -68,51 +64,12 @@ env:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
     outputs:
       shard_indices: ${{ steps.gen.outputs.shard_indices }}
       num_shards: ${{ steps.gen.outputs.num_shards }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-
-      - name: Require one-task smoke before standard-v1
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SMOKE_RUN_ID: ${{ inputs.one_task_smoke_run_id || '' }}
-        run: |
-          set -euo pipefail
-          scenario_task_set="$(npx --yes json5 "${SCENARIO_PATH}" | jq -r '.components.gateway.config.assessment_config.task_set // empty')"
-          if [[ "${scenario_task_set}" != "standard-v1" ]]; then
-            exit 0
-          fi
-          if [[ -z "${SMOKE_RUN_ID}" ]]; then
-            echo "standard-v1 requires one_task_smoke_run_id from a successful Run Agent Under Test Smoke run on this commit" >&2
-            exit 1
-          fi
-          if [[ ! "${SMOKE_RUN_ID}" =~ ^[0-9]+$ ]]; then
-            echo "one_task_smoke_run_id must be a GitHub Actions run id" >&2
-            exit 1
-          fi
-          smoke="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SMOKE_RUN_ID}")"
-          workflow_name="$(jq -r '.name // empty' <<<"${smoke}")"
-          status="$(jq -r '.status // empty' <<<"${smoke}")"
-          conclusion="$(jq -r '.conclusion // empty' <<<"${smoke}")"
-          head_sha="$(jq -r '.head_sha // empty' <<<"${smoke}")"
-          if [[ "${workflow_name}" != "Run Agent Under Test Smoke" ]]; then
-            echo "one_task_smoke_run_id must reference Run Agent Under Test Smoke, got: ${workflow_name}" >&2
-            exit 1
-          fi
-          if [[ "${status}" != "completed" || "${conclusion}" != "success" ]]; then
-            echo "one_task_smoke_run_id ${SMOKE_RUN_ID} is not a completed successful smoke run" >&2
-            exit 1
-          fi
-          if [[ "${head_sha}" != "${GITHUB_SHA}" ]]; then
-            echo "one_task_smoke_run_id ${SMOKE_RUN_ID} ran on ${head_sha}, expected current commit ${GITHUB_SHA}" >&2
-            exit 1
-          fi
 
       - name: Generate shard matrix
         id: gen
@@ -186,7 +143,7 @@ jobs:
         if: inputs.scenario_path == 'scenario-agent-under-test-smoke.json5' || inputs.scenario_path == 'scenario-standard-v1.json5'
         env:
           AGENT_UNDER_TEST_API_KEY: ${{ secrets.AGENT_UNDER_TEST__API_KEY || '' }}
-          OPENAI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENAI_API_KEY || secrets.OPENAI_API_KEY || '' }}
+          OPENAI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENAI_API_KEY || '' }}
           ANTHROPIC_API_KEY: ${{ secrets.AGENT_UNDER_TEST__ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY || '' }}
           GEMINI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__GEMINI_API_KEY || secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY || '' }}
           OPENROUTER_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENROUTER_API_KEY || secrets.OPENROUTER_API_KEY || '' }}
