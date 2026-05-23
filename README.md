@@ -49,7 +49,7 @@ public Quick Submit must not call Docker build for the 94-task set.
 - `scenario-agent-under-test-smoke.json5`: separate one-task
   `dialogue-parser` real-model smoke scenario for the generic purple image.
 - `scenario-standard-v1.json5`: branch full-mode scenario for all public
-  `standard-v1` tasks using prebuilt task env images and seven shards.
+  `standard-v1` tasks using prebuilt task env images and 20 shards.
 - `.github/workflows/quick-submit.yml`: AgentBeats Quick Submit entrypoint. It
   calls the official AgentBeats leaderboard template runner required by the live
   Quick Submit service.
@@ -72,15 +72,15 @@ public Quick Submit must not call Docker build for the 94-task set.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ebf47e2472b1bc0884fd512c5ea74876c4f65ef80978eb3c5f378dda976f46e1`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:54d55c74c5411d18bedbd55376e59bda17e6205d927344bdb074c6f8c3683f05`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ebf47e2472b1bc0884fd512c5ea74876c4f65ef80978eb3c5f378dda976f46e1`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:54d55c74c5411d18bedbd55376e59bda17e6205d927344bdb074c6f8c3683f05`
 - standalone green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:dddaea2c67983ab19168c6c5803d7ce3f3334d27ff4d912a0e35f175673c7323`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:9e661530fe4cc9d330e1069a89197860bb52bf1f29a635b9ab2f6f3ec872e595`
 - purple placeholder:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:61ccbf890d6ca59665524704e7308161d709e2ebfeaf8ea9f5ff297c06eb7599`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:81d2e5c6cca6a97d4842df91ad3193f37142702823d6a24197ecff2d7f1a6536`
 - task environments:
   `prebuilt_images/deploy-smoke-v1.json`
 
@@ -228,7 +228,7 @@ Configured for full AgentBeats submission, but not fully deploy-verified:
 - Generic purple agent-under-test support for `openhands`, `opencode`,
   `claude-code`, `codex`, `gemini-cli`, `terminus`, and `pi` in one image.
 - `scenario-standard-v1.json5` as the full-mode scenario for 94 public tasks
-  and seven shards. The maintainer runner injects the checked-in prebuilt image
+  and 20 shards. The maintainer runner injects the checked-in prebuilt image
   map and rejects incomplete `standard-v1` maps.
 
 Explicit full-submission status:
