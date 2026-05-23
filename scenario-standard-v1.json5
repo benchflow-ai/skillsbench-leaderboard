@@ -5,11 +5,6 @@
   config_schema: {
     type: "object",
     properties: {
-      openai_api_key: {
-        type: "string",
-        secret: true,
-        default: "",
-      },
       agent_under_test: {
         type: "object",
         properties: {
@@ -76,10 +71,8 @@
       },
     },
     skillsbench_green: {
-      manifest: "./green-agent-standard-v1.json5",
-      config: {
-        openai_api_key: "${config.openai_api_key}",
-      },
+      manifest: "./green-agent.json5",
+      config: {},
     },
     agent_under_test: {
       manifest: "./participant-agent-under-test.json5",
