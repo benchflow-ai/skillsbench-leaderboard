@@ -56,7 +56,7 @@ jobs:
       - name: Export agent-under-test secret for Amber
         env:
           AGENT_UNDER_TEST_API_KEY: ${{ secrets.AGENT_UNDER_TEST__API_KEY || '' }}
-          OPENAI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENAI_API_KEY || secrets.OPENAI_API_KEY || '' }}
+          OPENAI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENAI_API_KEY || '' }}
           ANTHROPIC_API_KEY: ${{ secrets.AGENT_UNDER_TEST__ANTHROPIC_API_KEY || secrets.ANTHROPIC_API_KEY || '' }}
           GEMINI_API_KEY: ${{ secrets.AGENT_UNDER_TEST__GEMINI_API_KEY || secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY || '' }}
           OPENROUTER_API_KEY: ${{ secrets.AGENT_UNDER_TEST__OPENROUTER_API_KEY || secrets.OPENROUTER_API_KEY || '' }}
