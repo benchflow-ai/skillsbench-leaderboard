@@ -11,7 +11,6 @@
       worker_image: { type: "string" },
       worker_image_digest: { type: "string" },
       prebuilt_images: { type: "string" },
-      openai_api_key: { type: "string", secret: true },
       require_prebuilt_images: { type: "boolean" },
       private_proof_dir: { type: "string" },
       private_proof_uri_prefix: { type: "string" },
@@ -41,7 +40,7 @@
   },
 
   program: {
-    image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:987cb9caaee3321fa6fb9f3343169e72bed9d66831dbb7c63b15ef3a92f62f59",
+    image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:54d55c74c5411d18bedbd55376e59bda17e6205d927344bdb074c6f8c3683f05",
     entrypoint: [
       "uv",
       "run",
@@ -67,10 +66,6 @@
       SKILLSBENCH_WORKER_PREBUILT_IMAGES: {
         when: "config.prebuilt_images",
         value: "${config.prebuilt_images}",
-      },
-      OPENAI_API_KEY: {
-        when: "config.openai_api_key",
-        value: "${config.openai_api_key}",
       },
       SKILLSBENCH_WORKER_VERIFY_PREBUILT_IMAGES: "true",
       SKILLSBENCH_WORKER_REQUIRE_PREBUILT_IMAGES: {
