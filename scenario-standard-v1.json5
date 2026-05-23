@@ -76,7 +76,7 @@
       },
     },
     skillsbench_green: {
-      manifest: "./green-agent.json5",
+      manifest: "./green-agent-standard-v1.json5",
       config: {
         openai_api_key: "${config.openai_api_key}",
       },
