@@ -21,7 +21,7 @@ on:
         type: string
       agent_model:
         description: "Agent-under-test model"
-        default: "gemini/gemini-3.5-flash"
+        default: "gemini/gemini-3.1-flash-lite-preview"
         type: string
       agent_timeout_sec:
         description: "Agent-under-test timeout in seconds"
@@ -69,7 +69,7 @@ jobs:
           DOUBAO_API_KEY: ${{ secrets.AGENT_UNDER_TEST__DOUBAO_API_KEY || secrets.DOUBAO_API_KEY || secrets.ARK_API_KEY || '' }}
           HUNYUAN_API_KEY: ${{ secrets.AGENT_UNDER_TEST__HUNYUAN_API_KEY || secrets.HUNYUAN_API_KEY || '' }}
           AGENT_HARNESS: ${{ inputs.agent_harness || 'openhands' }}
-          AGENT_MODEL: ${{ inputs.agent_model || 'gemini/gemini-3.5-flash' }}
+          AGENT_MODEL: ${{ inputs.agent_model || 'gemini/gemini-3.1-flash-lite-preview' }}
           AGENT_TIMEOUT_SEC: ${{ inputs.agent_timeout_sec || '900' }}
         run: .github/scripts/export-agent-under-test-config.sh
 
