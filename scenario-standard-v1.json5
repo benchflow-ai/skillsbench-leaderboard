@@ -63,7 +63,7 @@
           condition: "with_skills",
           allow_excluded_tasks: false,
           shard_index: 0,
-          num_shards: 7,
+          num_shards: 20,
           // After AgentBeats purple-agent registration, add:
           // participant_ids: { agent: "<registered-purple-agentbeats-uuid>" },
         },
@@ -116,6 +116,6 @@
     worker_mode: "embedded_green_worker",
     task_set: "standard-v1",
     prebuilt_task_env_required: true,
-    num_shards: 7,
+    num_shards: 20,
   },
 }

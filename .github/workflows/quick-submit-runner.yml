@@ -110,6 +110,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 330
     strategy:
+      max-parallel: 20
       matrix:
         shard_index: ${{ fromJSON(needs.setup.outputs.shard_indices) }}
       fail-fast: false

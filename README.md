@@ -279,9 +279,9 @@ uses: RDI-Foundation/agentbeats-leaderboard-template/.github/workflows/quick-sub
 ```
 
 The checked-in Quick Submit workflow keeps the default five-task deployment
-smoke at one shard. Standard-v1 full-mode scenarios must carry their own
-`num_shards: 7` assessment config, matching the Terminal-Bench-style pattern for
-larger task sets.
+smoke at one shard. Standard-v1 full-mode scenarios carry their own
+`num_shards: 20` assessment config, and both self-run and Quick Submit runners
+cap GitHub matrix concurrency with `max-parallel: 20`.
 
 The live AgentBeats green registration points at this repo, and the AgentBeats
 GitHub App is connected for `benchflow-ai/skillsbench-leaderboard`. Quick
