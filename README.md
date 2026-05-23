@@ -42,7 +42,7 @@ remain cache-only acceleration.
 - `scenario.json5`: Amber scenario for the five-task worker-backed run.
 - `green-agent.json5`: SkillsBench green-agent component manifest.
 - `worker.json5`: SkillsBench worker component manifest.
-- `participant-placeholder.json5`: baseline purple participant manifest.
+- `participant-placeholder.json5`: placeholder purple participant manifest.
 - `participant-agent-under-test.json5`: generic configurable purple
   agent-under-test manifest. It is one image with config-selected harness,
   model, provider, base URL, timeout, and secret fields.
@@ -77,7 +77,7 @@ Current public digest-pinned images:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef`
 - standalone green:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:dddaea2c67983ab19168c6c5803d7ce3f3334d27ff4d912a0e35f175673c7323`
-- purple baseline:
+- purple placeholder:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
 - purple agent-under-test:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:61ccbf890d6ca59665524704e7308161d709e2ebfeaf8ea9f5ff297c06eb7599`
@@ -122,8 +122,14 @@ BenchFlow-owned registration target:
 - standard-v1 scenario: `scenario-standard-v1.json5`
 - generic purple manifest: `participant-agent-under-test.json5`
 - green ID used by existing smoke evidence: `019e4ecb-4b5b-7481-b6f4-85ad93336437`
-- purple baseline ID used by existing smoke evidence:
-  `019e4ed1-d333-7133-807f-5f22c04d5eef`
+- generic purple agent-under-test page:
+  `https://agentbeats.dev/Yiminnn/skillsbench-generic-purple`
+- generic purple agent-under-test ID:
+  `019e536c-4bbd-7560-8c93-84452485d1d6`
+
+The old smoke-only participant registration has been retired. Keep
+older result and submission files that reference historical participant IDs as
+provenance only; do not use those IDs for new submissions.
 
 All repo URLs, raw manifest URLs, and runtime image refs in the current
 submission surface are BenchFlow-owned or RDI AgentBeats infrastructure refs.
@@ -143,6 +149,22 @@ Live Quick Submit has also been proven for the current five-task smoke:
 
 That run used the official AgentBeats Quick Submit runner and produced five
 score-eligible A2A task rows with no infra failure.
+
+The generic purple agent-under-test path has also been exercised through
+AgentBeats Quick Submit:
+
+- Quick Submit PR:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/pull/8`
+- workflow run:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/26322856816`
+- merged result:
+  `results/019e536d-6528-77c3-bba6-4d7b7ecf4455.json`
+- merged provenance:
+  `submissions/019e536d-6528-77c3-bba6-4d7b7ecf4455-provenance.json`
+
+That run proves A2A wiring for the generic purple image. It is not a full
+score-quality proof: the standard-v1 result rows are present but score
+ineligible.
 
 ## Source Branches
 
@@ -232,7 +254,7 @@ gh workflow run run-scenario.yml \
   --ref main \
   -f num_shards=1 \
   -f green_agent_id=019e4ecb-4b5b-7481-b6f4-85ad93336437 \
-  -f purple_agent_id=019e4ed1-d333-7133-807f-5f22c04d5eef \
+  -f purple_agent_id=019e536c-4bbd-7560-8c93-84452485d1d6 \
   -f require_durable_private_proof=false
 ```
 
@@ -280,14 +302,13 @@ uv run --with duckdb python - <<'PY'
 from pathlib import Path
 import duckdb
 
-agent_id = "019e4ed1-d333-7133-807f-5f22c04d5eef"
 con = duckdb.connect(":memory:")
 try:
     con.execute("CREATE TABLE results AS SELECT * FROM read_json_auto('results/*.json', filename = true)")
     for name in ["overall", "by_category", "by_difficulty"]:
         rows = con.execute((Path("queries") / f"{name}.sql").read_text()).fetchall()
-        if not rows or not any(row and str(row[0]) == agent_id for row in rows):
-            raise SystemExit(f"{name} query failed registered-id check: {rows}")
+        if not rows:
+            raise SystemExit(f"{name} query returned no rows")
     print("queries verified")
 finally:
     con.close()

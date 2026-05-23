@@ -35,7 +35,7 @@
       manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/8e8e608fab452e6126432f1bfff51e8812ebff31/green-agent.json5",
       config: {},
     },
-    baseline_agent: {
+    placeholder_agent: {
       manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/8e8e608fab452e6126432f1bfff51e8812ebff31/participant-placeholder.json5",
       config: {},
     },
@@ -43,7 +43,7 @@
 
   bindings: [
     { to: "#gateway.green", from: "#skillsbench_green.a2a" },
-    { to: "#gateway.purple1", from: "#baseline_agent.a2a" },
+    { to: "#gateway.purple1", from: "#placeholder_agent.a2a" },
     { to: "#skillsbench_green.proxy", from: "#gateway.proxy", weak: true },
   ],
 
@@ -54,7 +54,7 @@
       // Fill these after AgentBeats app registration. Do not use fixture UUIDs.
       skillsbench_green: "",
       agent: "",
-      baseline_agent: "",
+      placeholder_agent: "",
     },
     worker_mode: "embedded_green_worker",
   },
