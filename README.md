@@ -114,21 +114,21 @@ into `main`, so AgentBeats can read it from `results/*.json`.
 
 ## AgentBeats Registration
 
-Live AgentBeats registration status as of 2026-05-22:
+BenchFlow-owned registration target:
 
-- green page: `https://agentbeats.dev/Yiminnn/skillsbench-agentbeats`
-- green ID: `019e4ecb-4b5b-7481-b6f4-85ad93336437`
-- purple baseline page:
-  `https://agentbeats.dev/Yiminnn/skillsbench-baseline-purple`
-- purple baseline ID: `019e4ed1-d333-7133-807f-5f22c04d5eef`
-- registered repo and leaderboard repo:
-  `https://github.com/benchflow-ai/skillsbench-leaderboard`
-- registered Amber manifest:
-  `https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/54f98e9488ad82f3c8f84a8cdf6a2b9edb7dc29b/green-agent.json5`
+- source repo: `https://github.com/benchflow-ai/skillsbench`
+- leaderboard repo: `https://github.com/benchflow-ai/skillsbench-leaderboard`
+- green manifest: `green-agent.json5`
+- standard-v1 scenario: `scenario-standard-v1.json5`
+- generic purple manifest: `participant-agent-under-test.json5`
+- green ID used by existing smoke evidence: `019e4ecb-4b5b-7481-b6f4-85ad93336437`
+- purple baseline ID used by existing smoke evidence:
+  `019e4ed1-d333-7133-807f-5f22c04d5eef`
 
-AgentBeats has read the merged result at commit `4acc96c` and shows
-leaderboard rows for `Yiminnn/skillsbench-baseline-purple` across the overall,
-category, and difficulty query tabs.
+All repo URLs, raw manifest URLs, and runtime image refs in the current
+submission surface are BenchFlow-owned or RDI AgentBeats infrastructure refs.
+Do not register or submit new SkillsBench AgentBeats runs from a personal fork
+or personal GHCR package.
 
 Live Quick Submit has also been proven for the current five-task smoke:
 
@@ -192,7 +192,7 @@ Deploy-ready now:
 - BenchFlow-owned runtime images and the shared five-task task-env package refs.
 - Leaderboard queries for flat and nested AgentBeats result payloads.
 
-Prepared but not fully deploy-verified:
+Configured for full AgentBeats submission, but not fully deploy-verified:
 
 - `standard-v1` task-set manifest with 94 public tasks.
 - Runtime-first source branch support for `tasks: "all"`, `task_set:
@@ -201,9 +201,18 @@ Prepared but not fully deploy-verified:
   format.
 - Generic purple agent-under-test support for `openhands`, `opencode`,
   `claude-code`, `codex`, `gemini-cli`, `terminus`, and `pi` in one image.
-- `scenario-standard-v1.json5` as the branch-only full-mode scenario. It omits
-  the 94-image cache map by default so runtime builds from the baked task tree
-  remain the correctness path.
+- `scenario-standard-v1.json5` as the full-mode scenario for 94 public tasks
+  and seven shards. It omits the 94-image cache map by default so runtime
+  builds from the baked task tree remain the correctness path.
+
+Explicit full-submission status:
+
+- 94 public tasks x 7 configurable harnesses is configured.
+- Existing proof covers the five-task AgentBeats smoke path and a one-task
+  generic-purple path.
+- A complete 94-task x 7-harness AgentBeats evaluation has not been run.
+- Submit full mode as configured/staged until representative shard evidence or
+  the full run is available.
 
 The checked-in `scenario.json5` still includes a separate `skillsbench_worker`
 component and binding. The live Quick Submit path uses `green-agent.json5`,
