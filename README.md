@@ -72,9 +72,9 @@ public Quick Submit must not call Docker build for the 94-task set.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ebf47e2472b1bc0884fd512c5ea74876c4f65ef80978eb3c5f378dda976f46e1`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:ebf47e2472b1bc0884fd512c5ea74876c4f65ef80978eb3c5f378dda976f46e1`
 - standalone green:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:dddaea2c67983ab19168c6c5803d7ce3f3334d27ff4d912a0e35f175673c7323`
 - purple placeholder:
