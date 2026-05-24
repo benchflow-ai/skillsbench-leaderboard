@@ -1,0 +1,165 @@
+{
+  "manifest_version": "0.1.0",
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "agent_anthropic_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_base_url": {
+        "type": "string",
+        "description": "Optional OpenAI-compatible or provider-specific base URL."
+      },
+      "agent_deepseek_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_doubao_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_gemini_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_glm_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_harness": {
+        "type": "string",
+        "enum": [
+          "openhands",
+          "opencode",
+          "claude-code",
+          "codex",
+          "gemini-cli",
+          "terminus",
+          "pi"
+        ],
+        "default": "openhands"
+      },
+      "agent_hunyuan_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_kimi_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_minimax_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_model": {
+        "type": "string",
+        "default": "gemini/gemini-3.5-flash"
+      },
+      "agent_openai_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_openrouter_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_provider": {
+        "type": "string",
+        "description": "Optional provider hint used for provider-specific API-key environment variables."
+      },
+      "agent_qwen_api_key": {
+        "type": "string",
+        "secret": true
+      },
+      "agent_timeout_sec": {
+        "type": "integer",
+        "default": 900
+      },
+      "agent_xiaomi_api_key": {
+        "type": "string",
+        "secret": true
+      }
+    },
+    "required": [],
+    "additionalProperties": false
+  },
+  "components": {
+    "gateway": {
+      "manifest": "https://raw.githubusercontent.com/RDI-Foundation/agentbeats-gateway/refs/tags/v0.3/amber-manifest.json5",
+      "config": {
+        "assessment_config": {
+          "tasks": "all",
+          "task_set": "standard-v1",
+          "condition": "with_skills",
+          "allow_excluded_tasks": false,
+          "shard_index": 0,
+          "num_shards": 20
+        },
+        "participant_roles": {
+          "green": "green",
+          "purple1": "agent"
+        },
+        "callback_urls": {}
+      }
+    },
+    "green": {
+      "manifest": "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/13e1d104695daabf4e83951df207d55e025401f6/green-agent.json5",
+      "config": {}
+    },
+    "agent": {
+      "manifest": "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/90d5ad958e7c053835a3cd4083e2466f4edba3b8/participant-agent-under-test.json5",
+      "config": {
+        "anthropic_api_key": "${config.agent_anthropic_api_key}",
+        "api_key": "${config.agent_api_key}",
+        "base_url": "${config.agent_base_url}",
+        "deepseek_api_key": "${config.agent_deepseek_api_key}",
+        "doubao_api_key": "${config.agent_doubao_api_key}",
+        "gemini_api_key": "${config.agent_gemini_api_key}",
+        "glm_api_key": "${config.agent_glm_api_key}",
+        "harness": "${config.agent_harness}",
+        "hunyuan_api_key": "${config.agent_hunyuan_api_key}",
+        "kimi_api_key": "${config.agent_kimi_api_key}",
+        "minimax_api_key": "${config.agent_minimax_api_key}",
+        "model": "${config.agent_model}",
+        "openai_api_key": "${config.agent_openai_api_key}",
+        "openrouter_api_key": "${config.agent_openrouter_api_key}",
+        "provider": "${config.agent_provider}",
+        "qwen_api_key": "${config.agent_qwen_api_key}",
+        "timeout_sec": "${config.agent_timeout_sec}",
+        "xiaomi_api_key": "${config.agent_xiaomi_api_key}"
+      }
+    }
+  },
+  "bindings": [
+    {
+      "to": "#gateway.green",
+      "from": "#green.a2a"
+    },
+    {
+      "to": "#gateway.purple1",
+      "from": "#agent.a2a"
+    },
+    {
+      "to": "#green.proxy",
+      "from": "#gateway.proxy",
+      "weak": true
+    }
+  ],
+  "exports": {
+    "results": "#gateway.results"
+  },
+  "metadata": {
+    "agentbeats_ids": {
+      "green": "019e5799-3aca-7d20-ba8c-2b0bc785ac62",
+      "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+    }
+  },
+  "experimental_features": [
+    "docker"
+  ]
+}
