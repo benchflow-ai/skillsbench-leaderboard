@@ -4,7 +4,14 @@
 
   config_schema: {
     type: "object",
-    properties: {},
+    properties: {
+      openai_api_key: { type: "string" },
+      anthropic_api_key: { type: "string" },
+      gemini_api_key: { type: "string" },
+      google_api_key: { type: "string" },
+      gh_token: { type: "string" },
+      elevenlabs_api_key: { type: "string" },
+    },
     additionalProperties: false,
   },
 
@@ -36,6 +43,12 @@
       DOCKER_BUILDKIT: "0",
       COMPOSE_DOCKER_CLI_BUILD: "0",
       SKILLSBENCH_WORKER_PARTICIPANT_PROXY_URL: "${slots.proxy.url}",
+      OPENAI_API_KEY: "${config.openai_api_key}",
+      ANTHROPIC_API_KEY: "${config.anthropic_api_key}",
+      GEMINI_API_KEY: "${config.gemini_api_key}",
+      GOOGLE_API_KEY: "${config.google_api_key}",
+      GH_TOKEN: "${config.gh_token}",
+      ELEVENLABS_API_KEY: "${config.elevenlabs_api_key}",
     },
     mounts: [
       { name: "docker_socket", path: "/var/run/docker.sock", from: "framework.docker" },
