@@ -122,9 +122,13 @@ BenchFlow-owned registration target:
 - green manifest: `green-agent.json5`
 - standard-v1 scenario: `scenario-standard-v1.json5`
 - generic purple manifest: `participant-agent-under-test.json5`
-- green ID used by existing smoke evidence: `019e4ecb-4b5b-7481-b6f4-85ad93336437`
+- green AgentBeats ID: `019e5799-3aca-7d20-ba8c-2b0bc785ac62`
 - generic purple agent-under-test ID:
-  `019e536c-4bbd-7560-8c93-84452485d1d6`
+  `019e5799-ca68-7b33-b1a5-c97b92b6fda1`
+- green live manifest URL:
+  `https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/13e1d104695daabf4e83951df207d55e025401f6/green-agent.json5`
+- generic purple live manifest URL:
+  `https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/90d5ad958e7c053835a3cd4083e2466f4edba3b8/participant-agent-under-test.json5`
 
 The old smoke-only participant registration has been retired. Keep
 older result and submission files that reference historical participant IDs as
@@ -252,10 +256,10 @@ Run the official five-task smoke from `main`:
 ```bash
 gh workflow run run-scenario.yml \
   --repo benchflow-ai/skillsbench-leaderboard \
-  --ref main \
+  --ref codex/agentbeats-seven-agent-standard-v1 \
   -f num_shards=1 \
-  -f green_agent_id=019e4ecb-4b5b-7481-b6f4-85ad93336437 \
-  -f purple_agent_id=019e536c-4bbd-7560-8c93-84452485d1d6 \
+  -f green_agent_id=019e5799-3aca-7d20-ba8c-2b0bc785ac62 \
+  -f purple_agent_id=019e5799-ca68-7b33-b1a5-c97b92b6fda1 \
   -f require_durable_private_proof=false
 ```
 

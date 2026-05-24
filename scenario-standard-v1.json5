@@ -64,8 +64,9 @@
           allow_excluded_tasks: false,
           shard_index: 0,
           num_shards: 20,
-          // After AgentBeats purple-agent registration, add:
-          // participant_ids: { agent: "<registered-purple-agentbeats-uuid>" },
+          participant_ids: {
+            agent: "019e5799-ca68-7b33-b1a5-c97b92b6fda1",
+          },
         },
         participant_roles: { green: "skillsbench_green", purple1: "agent" },
       },
@@ -109,9 +110,10 @@
 
   metadata: {
     agentbeats_ids: {
-      skillsbench_green: "",
-      agent: "",
-      agent_under_test: "",
+      skillsbench_green: "019e5799-3aca-7d20-ba8c-2b0bc785ac62",
+      agent: "019e5799-ca68-7b33-b1a5-c97b92b6fda1",
+      agent_under_test: "019e5799-ca68-7b33-b1a5-c97b92b6fda1",
+      placeholder_agent: "019e5799-ca68-7b33-b1a5-c97b92b6fda1",
     },
     worker_mode: "embedded_green_worker",
     task_set: "standard-v1",
