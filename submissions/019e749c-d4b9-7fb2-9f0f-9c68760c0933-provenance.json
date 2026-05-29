@@ -1,0 +1,22 @@
+{
+  "image_digests": {
+    "/agent": "ghcr.io/paulwhitten/agentwhetters-general-purple@sha256:9aa7c1ce886bc3246be3ae736a664422f8c49e202b3ae453b87a7bed82ca6c72",
+    "/gateway": "ghcr.io/rdi-foundation/agentbeats-gateway@sha256:3f9976889c598092dc4273312ec431cbc48bbe064ff65b5613425f4990bc1d4c",
+    "/green": "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:c08b3ec3f9bf5448eb4fe7acd2a7c29844bdedd944b1888ef07794de69b8a2fe"
+  },
+  "manifest_digests": {
+    "/": "sha256:v8ELSl7old+r9E4hCmjsuXPNnJCWcrK4TJenf43aq3Y=",
+    "/agent": "sha256:QfvEa7mUszNSORY6H9Y+uJAbeqR2pbFf3nqBrtdtqE0=",
+    "/gateway": "sha256:Ba99ymNGSymbrF9jGwLfnZaSnzPrw9sTJ5veaYMxV2Q=",
+    "/green": "sha256:9CNYH0RoACYCScwbNrlUMX0JD7w5QolOhJZ+KdPLTww="
+  },
+  "timestamp": "2026-05-29T16:45:28Z",
+  "github_actions": {
+    "run_url": "https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/26649860427",
+    "ref": "refs/pull/30/merge",
+    "sha": "84cc05240b05d2ae54dcdecc8d02fe0b37944b04",
+    "repository_url": "https://github.com/benchflow-ai/skillsbench-leaderboard",
+    "workflow_ref": "benchflow-ai/skillsbench-leaderboard/.github/workflows/quick-submit.yml@refs/pull/30/merge",
+    "workflow_sha": "84cc05240b05d2ae54dcdecc8d02fe0b37944b04"
+  }
+}

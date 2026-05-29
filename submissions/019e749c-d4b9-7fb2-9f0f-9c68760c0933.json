@@ -1,0 +1,85 @@
+{
+  "manifest_version": "0.1.0",
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "agent_azure_openai_api_version": {
+        "type": "string"
+      },
+      "agent_azure_openai_endpoint": {
+        "type": "string"
+      },
+      "agent_model_name": {
+        "type": "string"
+      },
+      "agent_openai_api_key": {
+        "type": "string",
+        "secret": true
+      }
+    },
+    "required": [
+      "agent_openai_api_key"
+    ],
+    "additionalProperties": false
+  },
+  "components": {
+    "gateway": {
+      "manifest": "https://raw.githubusercontent.com/RDI-Foundation/agentbeats-gateway/refs/tags/v0.3/amber-manifest.json5",
+      "config": {
+        "assessment_config": {
+          "tasks": "all",
+          "task_set": "standard-v1",
+          "condition": "with_skills",
+          "allow_excluded_tasks": false,
+          "shard_index": 0,
+          "num_shards": 7
+        },
+        "participant_roles": {
+          "green": "green",
+          "purple1": "agent"
+        },
+        "callback_urls": {}
+      }
+    },
+    "green": {
+      "manifest": "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/98029394069e05958fcbc164ea3f8c1b0d85e723/green-agent.json5",
+      "config": {}
+    },
+    "agent": {
+      "manifest": "https://raw.githubusercontent.com/paulwhitten/AgentWhetters-general-purple/refs/heads/main/amber-manifest.json5",
+      "config": {
+        "azure_openai_api_version": "${config.agent_azure_openai_api_version}",
+        "azure_openai_endpoint": "${config.agent_azure_openai_endpoint}",
+        "model_name": "${config.agent_model_name}",
+        "openai_api_key": "${config.agent_openai_api_key}"
+      }
+    }
+  },
+  "bindings": [
+    {
+      "to": "#gateway.green",
+      "from": "#green.a2a"
+    },
+    {
+      "to": "#gateway.purple1",
+      "from": "#agent.a2a"
+    },
+    {
+      "to": "#green.proxy",
+      "from": "#gateway.proxy",
+      "weak": true
+    }
+  ],
+  "exports": {
+    "results": "#gateway.results"
+  },
+  "metadata": {
+    "agentbeats_ids": {
+      "green": "019e5799-3aca-7d20-ba8c-2b0bc785ac62",
+      "agent": "019e71e8-664d-73b1-9bde-6b004e555e2c"
+    }
+  },
+  "experimental_features": [
+    "docker"
+  ]
+}
