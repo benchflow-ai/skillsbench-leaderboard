@@ -66,6 +66,8 @@ remain cache-only acceleration.
 - `prebuilt_images/standard-v1.json`: generated full public task-image map.
 - `prebuilt_images/skillsbench-v1.1.json`: full digest-pinned task-image map
   for `skillsbench-v1.1`.
+- `deploy_bundles/skillsbench-v1.1.json`: deploy-ready bundle tying the source
+  revision, runtime image digests, task-set digest, and 87 prebuilt task images.
 - `queries/*.sql`: DuckDB leaderboard queries. The first column is the
   AgentBeats purple-agent UUID.
 - `results/`: merged public result JSON files read by AgentBeats.
@@ -87,6 +89,8 @@ Current public digest-pinned images:
   `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:07b930f8c412bb21e0c9027158a0336baaf495b7597fd9b9d91623feebaca8ce`
 - task environments:
   `prebuilt_images/skillsbench-v1.1.json`
+- deploy bundle:
+  `deploy_bundles/skillsbench-v1.1.json`
 
 The five `deploy-smoke-v1` task environment refs are public, digest-pinned
 entries under the shared `ghcr.io/benchflow-ai/skillsbench-task-env` GHCR
