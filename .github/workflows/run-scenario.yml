@@ -745,6 +745,50 @@ jobs:
           echo "Provenance:"
           cat provenance.json
 
+      - name: Aggregate private proof refs
+        env:
+          REQUIRE_DURABLE_PRIVATE_PROOF: ${{ inputs.require_durable_private_proof && 'true' || 'false' }}
+          PRIVATE_PROOF_URI_PREFIX: ${{ inputs.private_proof_uri_prefix || '' }}
+          PRIVATE_PROOF_RETENTION: ${{ inputs.private_proof_retention || '' }}
+        run: |
+          set -euo pipefail
+          proof_ref_files=()
+          for i in $(seq 0 $(( ${NUM_SHARDS} - 1 ))); do
+            f="shard-artifacts/shard-${i}/private-proof-manifest-refs.json"
+            if [[ -f "$f" ]]; then
+              proof_ref_files+=("$f")
+            elif [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
+              echo "ERROR: missing private proof refs for shard ${i}" >&2
+              ls -R shard-artifacts/ >&2 || true
+              exit 1
+            fi
+          done
+          if [[ "${#proof_ref_files[@]}" -eq 0 ]]; then
+            if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
+              echo "ERROR: durable private proof was required but no private proof refs were produced" >&2
+              exit 1
+            fi
+            rm -f private-proof-manifest-refs.json
+            exit 0
+          fi
+          jq -s \
+            --arg private_proof_storage "${PRIVATE_PROOF_URI_PREFIX%/}" \
+            --arg private_proof_retention "${PRIVATE_PROOF_RETENTION}" \
+            '{
+              private_proof_storage: $private_proof_storage,
+              private_proof_retention: $private_proof_retention,
+              private_proof_manifest_refs: ([.[].private_proof_manifest_refs[]] | unique)
+            }' "${proof_ref_files[@]}" > private-proof-manifest-refs.json
+          jq -e '
+            .private_proof_storage as $storage |
+            ($storage | type == "string" and length > 0) and
+            (.private_proof_retention | type == "string" and length > 0) and
+            (.private_proof_manifest_refs | type == "array" and length > 0) and
+            all(.private_proof_manifest_refs[]; type == "string" and startswith($storage + "/") and endswith("/proof.json"))
+          ' private-proof-manifest-refs.json >/dev/null
+          echo "Private proof manifest refs:"
+          cat private-proof-manifest-refs.json
+
       - name: Generate submission metadata
         id: metadata
         run: |
@@ -780,6 +824,10 @@ jobs:
           mv results.json "results/${UNIQUE_NAME}.json"
           mv provenance.json "submissions/${UNIQUE_NAME}-provenance.json"
           git add "results/${UNIQUE_NAME}.json" "submissions/${UNIQUE_NAME}-provenance.json" "submissions/${UNIQUE_NAME}.json5"
+          if [[ -f private-proof-manifest-refs.json ]]; then
+            mv private-proof-manifest-refs.json "submissions/${UNIQUE_NAME}-private-proof-manifest-refs.json"
+            git add "submissions/${UNIQUE_NAME}-private-proof-manifest-refs.json"
+          fi
           git commit -m "Submission: ${UNIQUE_NAME}
 
           Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

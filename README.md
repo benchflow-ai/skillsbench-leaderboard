@@ -254,7 +254,9 @@ a durable `private_proof_uri_prefix` using `s3://`, `gs://`, or `r2://`. The
 self-run workflow copies worker proof manifests out of the running
 SkillsBench container before teardown, publishes the proof directory to that
 private storage prefix, and uploads only
-`private-proof-manifest-refs.json` with the shard artifacts.
+`private-proof-manifest-refs.json` with the shard artifacts. The summary job
+also commits those refs under
+`submissions/*-private-proof-manifest-refs.json` for durable evidence assembly.
 
 Supported proof publishing configuration:
 
