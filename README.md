@@ -59,6 +59,8 @@ remain cache-only acceleration.
 - `.github/workflows/run-scenario.yml`: maintainer self-run workflow with
   SkillsBench-specific task-set and result-shape checks.
 - `task_sets/deploy-smoke-v1.json`: canonical five-task task-set manifest.
+- `task_sets/smoke.json`: one-task public-readiness smoke manifest used by
+  evidence validation.
 - `task_sets/standard-v1.json`: generated full public task-set manifest.
 - `task_sets/skillsbench-v1.1.json`: generated 87-task public task-set
   manifest for the next AgentBeats deployment.
