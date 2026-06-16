@@ -708,6 +708,10 @@ jobs:
             mv shard-artifacts/results.json shard-artifacts/shard-0/
             mv shard-artifacts/provenance.json shard-artifacts/shard-0/ 2>/dev/null || true
           fi
+          if [[ -f "shard-artifacts/private-proof-manifest-refs.json" && ! -f "shard-artifacts/shard-0/private-proof-manifest-refs.json" ]]; then
+            mkdir -p shard-artifacts/shard-0
+            mv shard-artifacts/private-proof-manifest-refs.json shard-artifacts/shard-0/
+          fi
           # Build expected file paths from shard count
           shard_results=()
           for i in $(seq 0 $(( ${NUM_SHARDS} - 1 ))); do
