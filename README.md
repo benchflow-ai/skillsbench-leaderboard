@@ -60,8 +60,12 @@ remain cache-only acceleration.
   SkillsBench-specific task-set and result-shape checks.
 - `task_sets/deploy-smoke-v1.json`: canonical five-task task-set manifest.
 - `task_sets/standard-v1.json`: generated full public task-set manifest.
+- `task_sets/skillsbench-v1.1.json`: generated 87-task public task-set
+  manifest for the next AgentBeats deployment.
 - `prebuilt_images/deploy-smoke-v1.json`: digest-pinned task environment images.
 - `prebuilt_images/standard-v1.json`: generated full public task-image map.
+- `prebuilt_images/skillsbench-v1.1.json`: full digest-pinned task-image map
+  for `skillsbench-v1.1`.
 - `queries/*.sql`: DuckDB leaderboard queries. The first column is the
   AgentBeats purple-agent UUID.
 - `results/`: merged public result JSON files read by AgentBeats.
@@ -72,17 +76,17 @@ remain cache-only acceleration.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:c305b974356603499594a5f34c883d164ad7684eaf6fd71c21c0c2ea30c33f94`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:4c4bff9b8596eec10f88d4999526b6bf9b7d7abe1e084688c515b63e495be6ef`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:c305b974356603499594a5f34c883d164ad7684eaf6fd71c21c0c2ea30c33f94`
 - standalone green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:dddaea2c67983ab19168c6c5803d7ce3f3334d27ff4d912a0e35f175673c7323`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:44ad6ce284909737b8eae5ff1ba043cc0ad7b6244c811590b7ce60159b9fa30e`
 - purple baseline:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:0ffaa273363680d0f4383087541562dffe2d75fcb22395815647df4cf58384f2`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:07b930f8c412bb21e0c9027158a0336baaf495b7597fd9b9d91623feebaca8ce`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:61ccbf890d6ca59665524704e7308161d709e2ebfeaf8ea9f5ff297c06eb7599`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:07b930f8c412bb21e0c9027158a0336baaf495b7597fd9b9d91623feebaca8ce`
 - task environments:
-  `prebuilt_images/deploy-smoke-v1.json`
+  `prebuilt_images/skillsbench-v1.1.json`
 
 The five `deploy-smoke-v1` task environment refs are public, digest-pinned
 entries under the shared `ghcr.io/benchflow-ai/skillsbench-task-env` GHCR
