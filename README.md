@@ -284,7 +284,10 @@ Supported proof publishing configuration:
   `SKILLSBENCH_PRIVATE_PROOF_AWS_REGION`.
 - `r2://...`: configure the same S3-compatible credentials plus
   `SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL` or `R2_ENDPOINT_URL`.
-- `gs://...`: authenticate `gcloud` on the runner before invoking the workflow.
+- `gs://...`: configure GitHub OIDC to GCP Workload Identity and set repository
+  variables `SKILLSBENCH_GCP_PROJECT_ID`, `SKILLSBENCH_GCP_WIF_PROVIDER`, and
+  `SKILLSBENCH_PRIVATE_PROOF_GCP_SERVICE_ACCOUNT`. The service account must be
+  able to write objects under the configured private GCS proof prefix.
 
 ## Quick Submit
 

@@ -98,10 +98,14 @@ jobs:
       fail-fast: false
 
     permissions:
+      id-token: write
       contents: read
 
     env:
       NUM_SHARDS: ${{ needs.setup.outputs.num_shards }}
+      GCP_PROJECT_ID: ${{ vars.SKILLSBENCH_GCP_PROJECT_ID || vars.GCP_PROJECT_ID || 'skillsbench' }}
+      GCP_WIF_PROVIDER: ${{ vars.SKILLSBENCH_GCP_WIF_PROVIDER || vars.GCP_WIF_PROVIDER || '' }}
+      GCP_SERVICE_ACCOUNT: ${{ vars.SKILLSBENCH_PRIVATE_PROOF_GCP_SERVICE_ACCOUNT || vars.GCP_SERVICE_ACCOUNT || '' }}
       AMBER_IMAGE: ghcr.io/rdi-foundation/amber-cli:v0.3
       AMBER_COMPOSE_DIR: amber-compose
       AMBER_COMPOSE_PROJECT: amber-scenario-${{ github.run_id }}-${{ github.run_attempt }}-shard-${{ matrix.shard_index }}
@@ -467,6 +471,31 @@ jobs:
           )
           PY
           fi
+
+      - name: Validate GCP private proof auth
+        if: ${{ always() && inputs.require_durable_private_proof && startsWith(inputs.private_proof_uri_prefix, 'gs://') }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GCP_WIF_PROVIDER}" ]]; then
+            echo "gs:// private proof publishing requires SKILLSBENCH_GCP_WIF_PROVIDER or GCP_WIF_PROVIDER" >&2
+            exit 1
+          fi
+          if [[ -z "${GCP_SERVICE_ACCOUNT}" ]]; then
+            echo "gs:// private proof publishing requires SKILLSBENCH_PRIVATE_PROOF_GCP_SERVICE_ACCOUNT or GCP_SERVICE_ACCOUNT" >&2
+            exit 1
+          fi
+
+      - name: Authenticate to GCP for private proof
+        if: ${{ always() && inputs.require_durable_private_proof && startsWith(inputs.private_proof_uri_prefix, 'gs://') }}
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Set up gcloud for private proof
+        if: ${{ always() && inputs.require_durable_private_proof && startsWith(inputs.private_proof_uri_prefix, 'gs://') }}
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Publish private proof
         if: ${{ always() && inputs.require_durable_private_proof }}
