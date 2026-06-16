@@ -30,7 +30,7 @@ on:
         default: ""
         type: string
       require_durable_private_proof:
-        description: "Require durable private-proof settings for the worker"
+        description: "Require durable private-proof settings for the SkillsBench worker"
         default: false
         type: boolean
       private_proof_uri_prefix:
@@ -251,8 +251,10 @@ jobs:
              else . end |
              if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+             elif $prebuilt_manifest and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.prebuilt_images = ($prebuilt_manifest | tojson)
              elif $prebuilt_manifest then
-               error("prebuilt_images require a skillsbench_worker component")
+               error("prebuilt_images require a skillsbench_worker or skillsbench_green component")
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
@@ -264,8 +266,12 @@ jobs:
                .components.skillsbench_worker.config.require_durable_private_proof = true |
                .components.skillsbench_worker.config.private_proof_uri_prefix = $private_proof_uri_prefix |
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
+             elif $require_durable_private_proof and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.require_durable_private_proof = true |
+               .components.skillsbench_green.config.private_proof_uri_prefix = $private_proof_uri_prefix |
+               .components.skillsbench_green.config.private_proof_retention = $private_proof_retention
              elif $require_durable_private_proof then
-               error("durable private proof requires a skillsbench_worker component")
+               error("durable private proof requires a skillsbench_worker or skillsbench_green component")
              else . end
             ' > patched.json
           mv patched.json "${SCENARIO_PATH}"
@@ -533,8 +539,10 @@ jobs:
              else . end |
              if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+             elif $prebuilt_manifest and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.prebuilt_images = ($prebuilt_manifest | tojson)
              elif $prebuilt_manifest then
-               error("prebuilt_images require a skillsbench_worker component")
+               error("prebuilt_images require a skillsbench_worker or skillsbench_green component")
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
@@ -546,8 +554,12 @@ jobs:
                .components.skillsbench_worker.config.require_durable_private_proof = true |
                .components.skillsbench_worker.config.private_proof_uri_prefix = $private_proof_uri_prefix |
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
+             elif $require_durable_private_proof and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.require_durable_private_proof = true |
+               .components.skillsbench_green.config.private_proof_uri_prefix = $private_proof_uri_prefix |
+               .components.skillsbench_green.config.private_proof_retention = $private_proof_retention
              elif $require_durable_private_proof then
-               error("durable private proof requires a skillsbench_worker component")
+               error("durable private proof requires a skillsbench_worker or skillsbench_green component")
              else . end
             ' > submission-scenario.json5
 
