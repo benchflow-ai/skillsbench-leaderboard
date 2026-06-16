@@ -249,6 +249,23 @@ gh workflow run run-scenario.yml \
 Do not pass `task_set` for the deployment smoke. The checked-in scenario already
 defaults to `deploy-smoke-v1`.
 
+For public-readiness runs, set `require_durable_private_proof=true` and provide
+a durable `private_proof_uri_prefix` using `s3://`, `gs://`, or `r2://`. The
+self-run workflow copies worker proof manifests out of the running
+SkillsBench container before teardown, publishes the proof directory to that
+private storage prefix, and uploads only
+`private-proof-manifest-refs.json` with the shard artifacts.
+
+Supported proof publishing configuration:
+
+- `s3://...`: configure `SKILLSBENCH_PRIVATE_PROOF_AWS_ACCESS_KEY_ID` and
+  `SKILLSBENCH_PRIVATE_PROOF_AWS_SECRET_ACCESS_KEY`, or the standard
+  `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` secrets. Optionally set
+  `SKILLSBENCH_PRIVATE_PROOF_AWS_REGION`.
+- `r2://...`: configure the same S3-compatible credentials plus
+  `SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL` or `R2_ENDPOINT_URL`.
+- `gs://...`: authenticate `gcloud` on the runner before invoking the workflow.
+
 ## Quick Submit
 
 Quick Submit requirements from AgentBeats:

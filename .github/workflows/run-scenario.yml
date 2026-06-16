@@ -34,7 +34,7 @@ on:
         default: false
         type: boolean
       private_proof_uri_prefix:
-        description: "Durable private proof URI prefix (s3://, gs://, r2://, or https://)"
+        description: "Durable private proof URI prefix (s3://, gs://, or r2://)"
         default: ""
         type: string
       private_proof_retention:
@@ -171,7 +171,7 @@ jobs:
           set -euo pipefail
           uuid_re='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'
           task_set_re='^[A-Za-z0-9_.-]+$'
-          durable_uri_re='^(s3|gs|r2|https)://'
+          durable_uri_re='^(s3|gs|r2)://'
           if [[ -n "${GREEN_AGENT_ID}" && ! "${GREEN_AGENT_ID}" =~ ${uuid_re} ]]; then
             echo "green_agent_id must be a registered AgentBeats UUID" >&2
             exit 1
@@ -204,7 +204,7 @@ jobs:
           fi
           if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
             if [[ ! "${PRIVATE_PROOF_URI_PREFIX}" =~ ${durable_uri_re} ]]; then
-              echo "private_proof_uri_prefix must use s3://, gs://, r2://, or https:// when durable proof is required" >&2
+              echo "private_proof_uri_prefix must use s3://, gs://, or r2:// when durable proof is required by this workflow" >&2
               exit 1
             fi
             if [[ "${PRIVATE_PROOF_URI_PREFIX}" =~ [?#] ]]; then
@@ -417,6 +417,107 @@ jobs:
           fi
         timeout-minutes: 300
 
+      - name: Collect private proof
+        if: always()
+        env:
+          REQUIRE_DURABLE_PRIVATE_PROOF: ${{ inputs.require_durable_private_proof && 'true' || 'false' }}
+          PRIVATE_PROOF_URI_PREFIX: ${{ inputs.private_proof_uri_prefix || '' }}
+          PRIVATE_PROOF_ROOT: ${{ runner.temp }}/skillsbench-private-proof
+        run: |
+          set -euo pipefail
+          rm -rf "${PRIVATE_PROOF_ROOT}"
+          mkdir -p "${PRIVATE_PROOF_ROOT}" "${AMBER_COMPOSE_DIR}/output"
+          collected=0
+          for moniker in /skillsbench_green /skillsbench_worker; do
+            mapfile -t containers < <(
+              docker ps -aq \
+                --filter "label=com.docker.compose.project=${AMBER_COMPOSE_PROJECT}" \
+                --filter "label=amber_component_moniker=${moniker}"
+            )
+            for cid in "${containers[@]}"; do
+              if docker cp "${cid}:/home/worker/jobs/agentbeats-private-proof/." "${PRIVATE_PROOF_ROOT}/" 2>/dev/null; then
+                collected=1
+              fi
+            done
+          done
+          if [[ "${collected}" != "1" ]]; then
+            if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
+              echo "durable private proof is required but no worker proof directory was collected" >&2
+              exit 1
+            fi
+            echo "No worker private proof directory was available to collect."
+            exit 0
+          fi
+          if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
+            python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          proof_root = Path(os.environ["PRIVATE_PROOF_ROOT"])
+          prefix = os.environ["PRIVATE_PROOF_URI_PREFIX"].rstrip("/")
+          refs = [
+              f"{prefix}/{path.relative_to(proof_root).as_posix()}"
+              for path in sorted(proof_root.glob("*/proof.json"))
+          ]
+          if not refs:
+              raise SystemExit("durable private proof is required but no proof.json manifests were collected")
+          Path(os.environ["AMBER_COMPOSE_DIR"], "output", "private-proof-manifest-refs.json").write_text(
+              json.dumps({"private_proof_manifest_refs": refs}, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+          fi
+
+      - name: Publish private proof
+        if: ${{ always() && inputs.require_durable_private_proof }}
+        env:
+          PRIVATE_PROOF_URI_PREFIX: ${{ inputs.private_proof_uri_prefix || '' }}
+          PRIVATE_PROOF_ROOT: ${{ runner.temp }}/skillsbench-private-proof
+          AWS_ACCESS_KEY_ID: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID || '' }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY || '' }}
+          AWS_SESSION_TOKEN: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_SESSION_TOKEN || secrets.AWS_SESSION_TOKEN || '' }}
+          AWS_REGION: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_REGION || secrets.AWS_REGION || 'us-east-1' }}
+          AWS_ENDPOINT_URL_S3: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_S3_ENDPOINT_URL || secrets.AWS_ENDPOINT_URL_S3 || '' }}
+          R2_ENDPOINT_URL: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL || secrets.R2_ENDPOINT_URL || '' }}
+        run: |
+          set -euo pipefail
+          if [[ ! -d "${PRIVATE_PROOF_ROOT}" ]] || ! find "${PRIVATE_PROOF_ROOT}" -mindepth 2 -name proof.json -print -quit | grep -q .; then
+            echo "durable private proof is required but no collected proof.json manifests exist" >&2
+            exit 1
+          fi
+          case "${PRIVATE_PROOF_URI_PREFIX}" in
+            s3://*)
+              if ! command -v aws >/dev/null 2>&1; then
+                python -m pip install --user awscli
+                export PATH="${HOME}/.local/bin:${PATH}"
+              fi
+              aws s3 sync --only-show-errors "${PRIVATE_PROOF_ROOT}/" "${PRIVATE_PROOF_URI_PREFIX%/}/"
+              ;;
+            r2://*)
+              if ! command -v aws >/dev/null 2>&1; then
+                python -m pip install --user awscli
+                export PATH="${HOME}/.local/bin:${PATH}"
+              fi
+              endpoint="${R2_ENDPOINT_URL:-${AWS_ENDPOINT_URL_S3:-}}"
+              if [[ -z "${endpoint}" ]]; then
+                echo "r2:// private proof publishing requires SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL or R2_ENDPOINT_URL" >&2
+                exit 1
+              fi
+              aws s3 sync --only-show-errors "${PRIVATE_PROOF_ROOT}/" "s3://${PRIVATE_PROOF_URI_PREFIX#r2://}/" --endpoint-url "${endpoint}"
+              ;;
+            gs://*)
+              if ! command -v gcloud >/dev/null 2>&1; then
+                echo "gs:// private proof publishing requires gcloud on the runner" >&2
+                exit 1
+              fi
+              gcloud storage cp --recursive "${PRIVATE_PROOF_ROOT}/*" "${PRIVATE_PROOF_URI_PREFIX%/}/"
+              ;;
+            *)
+              echo "unsupported private_proof_uri_prefix for workflow publishing: ${PRIVATE_PROOF_URI_PREFIX}" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Stop scenario
         if: always()
         run: docker compose -f "${AMBER_COMPOSE_DIR}/compose.yaml" -p "${AMBER_COMPOSE_PROJECT}" down -v --remove-orphans || true
@@ -429,6 +530,7 @@ jobs:
           path: |
             ${{ env.AMBER_COMPOSE_DIR }}/output/results.json
             ${{ env.AMBER_COMPOSE_DIR }}/output/provenance.json
+            ${{ env.AMBER_COMPOSE_DIR }}/output/private-proof-manifest-refs.json
 
   summary:
     needs: [setup, eval]
@@ -461,7 +563,7 @@ jobs:
           set -euo pipefail
           uuid_re='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'
           task_set_re='^[A-Za-z0-9_.-]+$'
-          durable_uri_re='^(s3|gs|r2|https)://'
+          durable_uri_re='^(s3|gs|r2)://'
           if [[ -n "${GREEN_AGENT_ID}" && ! "${GREEN_AGENT_ID}" =~ ${uuid_re} ]]; then
             echo "green_agent_id must be a registered AgentBeats UUID" >&2
             exit 1
@@ -494,7 +596,7 @@ jobs:
           fi
           if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
             if [[ ! "${PRIVATE_PROOF_URI_PREFIX}" =~ ${durable_uri_re} ]]; then
-              echo "private_proof_uri_prefix must use s3://, gs://, r2://, or https:// when durable proof is required" >&2
+              echo "private_proof_uri_prefix must use s3://, gs://, or r2:// when durable proof is required by this workflow" >&2
               exit 1
             fi
             if [[ "${PRIVATE_PROOF_URI_PREFIX}" =~ [?#] ]]; then
