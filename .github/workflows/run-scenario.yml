@@ -520,7 +520,12 @@ jobs:
                 python -m pip install --user awscli
                 export PATH="${HOME}/.local/bin:${PATH}"
               fi
-              aws s3 sync --only-show-errors "${PRIVATE_PROOF_ROOT}/" "${PRIVATE_PROOF_URI_PREFIX%/}/"
+              if [[ -n "${AWS_ENDPOINT_URL_S3}" ]]; then
+                aws configure set default.s3.addressing_style path
+                aws s3 sync --only-show-errors "${PRIVATE_PROOF_ROOT}/" "${PRIVATE_PROOF_URI_PREFIX%/}/" --endpoint-url "${AWS_ENDPOINT_URL_S3}"
+              else
+                aws s3 sync --only-show-errors "${PRIVATE_PROOF_ROOT}/" "${PRIVATE_PROOF_URI_PREFIX%/}/"
+              fi
               ;;
             r2://*)
               if ! command -v aws >/dev/null 2>&1; then

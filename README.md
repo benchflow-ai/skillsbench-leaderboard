@@ -281,7 +281,8 @@ Supported proof publishing configuration:
 - `s3://...`: configure `SKILLSBENCH_PRIVATE_PROOF_AWS_ACCESS_KEY_ID` and
   `SKILLSBENCH_PRIVATE_PROOF_AWS_SECRET_ACCESS_KEY`, or the standard
   `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` secrets. Optionally set
-  `SKILLSBENCH_PRIVATE_PROOF_AWS_REGION`.
+  `SKILLSBENCH_PRIVATE_PROOF_AWS_REGION`. For S3-compatible storage such as
+  Supabase Storage, also set `SKILLSBENCH_PRIVATE_PROOF_S3_ENDPOINT_URL`.
 - `r2://...`: configure the same S3-compatible credentials plus
   `SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL` or `R2_ENDPOINT_URL`.
 - `gs://...`: configure GitHub OIDC to GCP Workload Identity and set repository
