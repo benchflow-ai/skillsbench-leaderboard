@@ -6,7 +6,7 @@ unchanged on `main`.
 
 ## Scope
 
-The checked-in scenario defaults to `deploy-smoke-v1`:
+The maintainer self-run scenario defaults to `deploy-smoke-v1`:
 
 - `citation-check`
 - `court-form-filling`
@@ -18,24 +18,21 @@ This remains the minimal public deployment gate for proving the SkillsBench
 green agent, worker, A2A participant boundary, result shape, and leaderboard
 queries.
 
-The broader `standard-v1` task set is staged for runtime-first full mode:
+The current AgentBeats promotion target is `skillsbench-v1.1`:
 
-- `task_sets/standard-v1.json`: all 94 public direct children of
-  `benchflow-ai/skillsbench:tasks/` at the source revision used for this sync.
-- `prebuilt_images/standard-v1.json`: optional cache refs under the shared
-  `ghcr.io/benchflow-ai/skillsbench-task-env` package. They are not required
-  for full-mode correctness.
+- `task_sets/skillsbench-v1.1.json`: 87 public tasks generated from
+  `benchflow-ai/skillsbench@12ebd8653093e0734c7902835cb20c054196026c`.
+- `prebuilt_images/skillsbench-v1.1.json`: digest-pinned public `linux/amd64`
+  task environment images for all 87 task ids.
+- `deploy_bundles/skillsbench-v1.1.json`: source revision, runtime image
+  digests, task-set digest, and 87 prebuilt task image refs in one reviewable
+  bundle.
 
-The four `benchflow-ai/skillsbench:tasks_excluded/` tasks are intentionally not
-included in `standard-v1`: `diff-transformer_impl`, `mhc-layer-impl`,
-`scheduling-email-assistant`, and `speaker-diarization-subtitles`.
-
-Full mode should follow the Terminal-Bench-style runtime-first path: the green
-image embeds the worker and pre-bakes the SkillsBench task tree, the worker
-discovers selected tasks from local `tasks/*/task.toml`, shards by
-`num_shards`/`shard_index`, and builds/starts each
-`tasks/<id>/environment/Dockerfile` at assessment time. Prebuilt task images
-remain cache-only acceleration.
+`green-agent.json5` is the registered AgentBeats green manifest. It embeds the
+worker process, defaults to `skillsbench-v1.1`, shards the 87-task set across
+seven shards, and carries the same 87-image map as
+`prebuilt_images/skillsbench-v1.1.json`. The workflow can still inject a smaller
+task set, such as `smoke`, for maintainer evidence runs.
 
 ## Files
 
@@ -48,8 +45,8 @@ remain cache-only acceleration.
   model, provider, base URL, timeout, and secret fields.
 - `scenario-agent-under-test-smoke.json5`: separate one-task
   `dialogue-parser` real-model smoke scenario for the generic purple image.
-- `scenario-standard-v1.json5`: branch full-mode scenario for all public
-  `standard-v1` tasks using runtime-first task builds and seven shards.
+- `scenario-standard-v1.json5`: legacy staged full-mode scenario retained for
+  comparison; `skillsbench-v1.1` is the current promotion target.
 - `.github/workflows/quick-submit.yml`: AgentBeats Quick Submit entrypoint. It
   calls the official AgentBeats leaderboard template runner required by the live
   Quick Submit service.
@@ -61,11 +58,12 @@ remain cache-only acceleration.
 - `task_sets/deploy-smoke-v1.json`: canonical five-task task-set manifest.
 - `task_sets/smoke.json`: one-task public-readiness smoke manifest used by
   evidence validation.
-- `task_sets/standard-v1.json`: generated full public task-set manifest.
+- `task_sets/standard-v1.json`: legacy generated full public task-set manifest.
 - `task_sets/skillsbench-v1.1.json`: generated 87-task public task-set
   manifest for the next AgentBeats deployment.
 - `prebuilt_images/deploy-smoke-v1.json`: digest-pinned task environment images.
-- `prebuilt_images/standard-v1.json`: generated full public task-image map.
+- `prebuilt_images/standard-v1.json`: legacy generated full public task-image
+  map.
 - `prebuilt_images/skillsbench-v1.1.json`: full digest-pinned task-image map
   for `skillsbench-v1.1`.
 - `deploy_bundles/skillsbench-v1.1.json`: deploy-ready bundle tying the source
@@ -94,11 +92,11 @@ Current public digest-pinned images:
 - deploy bundle:
   `deploy_bundles/skillsbench-v1.1.json`
 
-The five `deploy-smoke-v1` task environment refs are public, digest-pinned
-entries under the shared `ghcr.io/benchflow-ai/skillsbench-task-env` GHCR
-package. The `standard-v1` image map follows the same shared-package format,
-but it is an optional cache map. Missing or unresolved cache refs must fall
-back to runtime builds from the baked local task Dockerfiles.
+The five `deploy-smoke-v1` task environment refs and all 87
+`skillsbench-v1.1` task environment refs are public, digest-pinned entries under
+the shared `ghcr.io/benchflow-ai/skillsbench-task-env` GHCR package. The
+`skillsbench-v1.1` worker path verifies that every referenced prebuilt image is
+present and usable before running public-readiness evaluations.
 
 ## Official Self-Run Evidence
 
@@ -129,7 +127,8 @@ BenchFlow-owned registration target:
 - source repo: `https://github.com/benchflow-ai/skillsbench`
 - leaderboard repo: `https://github.com/benchflow-ai/skillsbench-leaderboard`
 - green manifest: `green-agent.json5`
-- standard-v1 scenario: `scenario-standard-v1.json5`
+- current task set: `skillsbench-v1.1`
+- deploy bundle: `deploy_bundles/skillsbench-v1.1.json`
 - generic purple manifest: `participant-agent-under-test.json5`
 - green ID used by existing smoke evidence: `019e4ecb-4b5b-7481-b6f4-85ad93336437`
 - purple baseline ID used by existing smoke evidence:
@@ -156,41 +155,42 @@ score-eligible A2A task rows with no infra failure.
 
 ## Source Branches
 
-The runtime images were built from branch-scoped source work, not from direct
-changes to official `main` branches:
+The current v1.1 runtime images and task manifests were built from
+branch-scoped source work, not from direct changes to official `main` branches:
 
-- `benchflow-ai/skillsbench:codex/agentbeats-green-agent-runtime`
-- `benchflow-ai/skillsbench:codex/agentbeats-seven-agent-standard-v1`
-- `benchflow-ai/benchflow:codex/agentbeats-a2a-adapter-audit`
+- `benchflow-ai/skillsbench:codex/skillsbench-agentbeats-v1-1-update`
+- `benchflow-ai/skillsbench-leaderboard:agentbeats/sync-skillsbench-v1.1`
 
 A2A is the AgentBeats participant protocol boundary. ACP remains BenchFlow's
 coding-agent transport.
 
-## standard-v1 Full Mode
+## skillsbench-v1.1 Full Mode
 
 Full public task-set updates should originate from `benchflow-ai/skillsbench`,
-not manual edits in this repo. The runtime-first source branch reads
-`tasks/*/task.toml`, skips `tasks_excluded/` and any explicit denylist, and
-updates the public task-set manifest. It does not require all task environment
-images to be pre-published before `standard-v1` can be deploy-ready.
+not manual edits in this repo. The v1.1 source branch generated the public
+task-set manifest, built the runtime images, built all task environment images,
+and exported a deploy bundle for review.
 
-- `task_sets/standard-v1.json`
-- optional `prebuilt_images/standard-v1.json` cache entries
+- `task_sets/skillsbench-v1.1.json`
+- `task_sets/skillsbench-v1.1.source.json`
+- `prebuilt_images/skillsbench-v1.1.json`
+- `deploy_bundles/skillsbench-v1.1.json`
 
-Current runtime-first verification target:
+Current v1.1 verification target:
 
 - JSON files parse.
-- `task_sets/standard-v1.json` has 94 public tasks.
+- `task_sets/skillsbench-v1.1.json` has 87 public tasks.
 - No `tasks_excluded/` ids are present.
-- `task_set: "standard-v1"` or `tasks: "all"` selects public tasks from the
-  baked source tree.
+- `task_set: "skillsbench-v1.1"` selects the generated public task set.
 - `num_shards` and `shard_index` deterministically split the selected task ids.
-- Cache refs are optional and are used only when they resolve.
-- No full all-task AgentBeats evaluation has been run.
+- All 87 prebuilt task environment refs are digest-pinned and public.
+- The registered green manifest embeds the worker and carries the 87-image map.
+- No full 87-task AgentBeats scoring run has been run yet.
 
-The runtime-first green/worker image has been built and published from the
-source branch. The remaining production gate is to run representative shard
-smoke checks before switching the live default beyond `deploy-smoke-v1`.
+The green, worker, purple, and task environment images have been built and
+published from the source branch. The remaining production gate is to provision
+durable private-proof storage and run the registered AgentBeats smoke/scoring
+path with `skillsbench-v1.1`.
 
 ## Current Deployment State
 
@@ -204,33 +204,25 @@ Deploy-ready now:
 
 Configured for full AgentBeats submission, but not fully deploy-verified:
 
-- `standard-v1` task-set manifest with 94 public tasks.
-- Runtime-first source branch support for `tasks: "all"`, `task_set:
-  "standard-v1"`, deterministic sharding, and cache-optional task startup.
-- Optional `standard-v1` prebuilt image cache map in shared-package digest-ref
-  format.
+- `skillsbench-v1.1` task-set manifest with 87 public tasks.
+- Digest-pinned prebuilt image map for all 87 task environment images.
+- Embedded-green source branch support for `task_set: "skillsbench-v1.1"`,
+  deterministic sharding, durable private proof, and prebuilt image verification.
 - Generic purple agent-under-test support for `openhands`, `opencode`,
   `claude-code`, `codex`, `gemini-cli`, `terminus`, and `pi` in one image.
-- `scenario-standard-v1.json5` as the full-mode scenario for 94 public tasks
-  and seven shards. It omits the 94-image cache map by default so runtime
-  builds from the baked task tree remain the correctness path.
+- `green-agent.json5` as the AgentBeats-registered full-mode manifest for 87
+  public tasks and seven shards.
 
 Explicit full-submission status:
 
-- 94 public tasks x 7 configurable harnesses is configured.
-- Existing proof covers the five-task AgentBeats smoke path and a one-task
-  generic-purple path.
-- A complete 94-task x 7-harness AgentBeats evaluation has not been run.
-- Submit full mode as configured/staged until representative shard evidence or
-  the full run is available.
-
-The checked-in `scenario.json5` still includes a separate `skillsbench_worker`
-component and binding. The live Quick Submit path uses `green-agent.json5`,
-where the green component embeds the worker because AgentBeats-generated Quick
-Submit scenarios include gateway + green + purple, not a custom worker
-component. The separate worker in `scenario.json5` is therefore redundant for
-Quick Submit, but remains useful for local/self-run compatibility until a later
-cleanup removes or splits that path.
+- 87 public tasks are configured for the green AgentBeats manifest.
+- Existing proof covers the five-task AgentBeats adoption path, the one-task
+  generic-purple path, and one-task v1.1 workflow smoke runs from the current
+  branch.
+- A complete 87-task AgentBeats evaluation has not been run.
+- Submit full mode only after durable private-proof storage is provisioned and
+  the registered AgentBeats IDs are confirmed against the digest-pinned
+  manifests.
 
 ## Self-Run
 
@@ -248,6 +240,32 @@ gh workflow run run-scenario.yml \
 
 Do not pass `task_set` for the deployment smoke. The checked-in scenario already
 defaults to `deploy-smoke-v1`.
+
+Run the current v1.1 one-task public-readiness smoke from this branch:
+
+```bash
+gh workflow run run-scenario.yml \
+  --repo benchflow-ai/skillsbench-leaderboard \
+  --ref agentbeats/sync-skillsbench-v1.1 \
+  -f task_set=smoke \
+  -f num_shards=1 \
+  -f green_agent_id=019e4ecb-4b5b-7481-b6f4-85ad93336437 \
+  -f purple_agent_id=019e4ed1-d333-7133-807f-5f22c04d5eef \
+  -f require_durable_private_proof=false
+```
+
+Latest current-branch non-durable smoke evidence:
+
+- workflow run:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27650630569`
+- workflow commit:
+  `fd7ff400fd0289f8fd7b90047c7b2dcbd4358de6`
+- submission branch:
+  `submission-benchflow-ai-20260616-215921`
+- result status:
+  one `citation-check` row for `task_set: "smoke"` with the expected
+  `verifier_error` non-score outcome and digest-pinned green/purple image
+  provenance.
 
 For public-readiness runs, set `require_durable_private_proof=true` and provide
 a durable `private_proof_uri_prefix` using `s3://`, `gs://`, or `r2://`. The
@@ -285,9 +303,9 @@ uses: RDI-Foundation/agentbeats-leaderboard-template/.github/workflows/quick-sub
 ```
 
 The checked-in Quick Submit workflow keeps the default five-task deployment
-smoke at one shard. Standard-v1 full-mode scenarios must carry their own
-`num_shards: 7` assessment config, matching the Terminal-Bench-style pattern for
-larger task sets.
+smoke at one shard. `skillsbench-v1.1` full-mode submissions must carry their
+own `task_set: "skillsbench-v1.1"` and `num_shards: 7` assessment config,
+matching the Terminal-Bench-style pattern for larger task sets.
 
 The live AgentBeats green registration points at this repo, and the AgentBeats
 GitHub App is connected for `benchflow-ai/skillsbench-leaderboard`. Quick
@@ -325,26 +343,30 @@ PY
 
 ## Official Deployment Checklist
 
-- `scenario.json5` on `main` uses this repo's raw manifest URLs pinned to a
-  verified commit.
+- `green-agent.json5` on `main` uses the digest-pinned v1.1 worker image and
+  embedded 87-image prebuilt map from `deploy_bundles/skillsbench-v1.1.json`.
+- `task_sets/skillsbench-v1.1.json` has 87 public tasks and task-set digest
+  `sha256:0ca23b2cbf5a3a82c787600fa88b2b3c153f39c32929556929b4555b9ed1e1ea`.
 - Official `main` self-run succeeds with registered green and purple IDs.
 - Generated result has exactly five public flattened rows.
 - Public rows have `score_eligible: true`, `infra_failure_type: null`, and
   `agent_transport: "a2a"`.
 - Public rows do not expose hidden tests, solutions, credentials, raw logs,
   local paths, or private proof.
+- Durable private proof storage is configured with an `s3://`, `r2://`, or
+  `gs://` prefix, and durable runs commit only
+  `submissions/*-private-proof-manifest-refs.json`.
 - DuckDB queries return the registered purple AgentBeats UUID as the first
   column.
 - Generated result branch is merged into `main` so AgentBeats can read
   `results/*.json`.
 - AgentBeats green registration points to
   `https://github.com/benchflow-ai/skillsbench-leaderboard`.
-- AgentBeats UI has read commit `4acc96c` and renders overall, category, and
-  difficulty leaderboard rows.
+- After merge, AgentBeats UI reads the updated leaderboard `main` commit and
+  renders overall, category, and difficulty leaderboard rows.
 - Quick Submit GitHub App connection is approved for
   `benchflow-ai/skillsbench-leaderboard`; rerun a live submit smoke after
   manifest updates.
-- `standard-v1` full adoption remains prepared but not fully verified until a
-  representative runtime-first shard smoke passes with the published
-  green/worker image. Full adoption does not require all 94 task environment
-  image refs to be pre-published.
+- `skillsbench-v1.1` full adoption remains prepared but not fully verified
+  until a durable registered-ID smoke and the canonical 87-task scoring run pass
+  with the published green/worker image.
