@@ -1,0 +1,13 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-full-e6ab0a2f-a48f8c0",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-full-e6ab0a2f-a48f8c0/01632b76f3e8418897f7332da971b991/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-full-e6ab0a2f-a48f8c0/3b9354f8b3ef49779871251ec53186fd/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-full-e6ab0a2f-a48f8c0/4b1489dcfe5f49faafa2e326ded759ac/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-full-e6ab0a2f-a48f8c0/d0f5c14d22d946868dbb4b80d61cc48d/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-full-e6ab0a2f-a48f8c0/ebd31a96e1b04609923d1b893f6c6b3c/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-full-e6ab0a2f-a48f8c0/f1ef48e07d484e1ea8d62be6065d7f37/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-full-e6ab0a2f-a48f8c0/f5904347ec32490d8b0dd5b6e3b004aa/proof.json"
+  ]
+}
