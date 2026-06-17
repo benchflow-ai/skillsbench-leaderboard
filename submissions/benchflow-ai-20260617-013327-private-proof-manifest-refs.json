@@ -1,0 +1,13 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/canonical-a54e9f8-20260617-010047",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/canonical-a54e9f8-20260617-010047/21da158540544ebbb910d07ca0f2d265/proof.json",
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/canonical-a54e9f8-20260617-010047/5c80ed7e183e475e8493eec198e84d31/proof.json",
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/canonical-a54e9f8-20260617-010047/82ff8b5e93f643a2b2a229ac9d0a3b9c/proof.json",
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/canonical-a54e9f8-20260617-010047/86249114d06f49b7b19387a0d9389bd9/proof.json",
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/canonical-a54e9f8-20260617-010047/9dcb746e2f174793bcb13f62e110df77/proof.json",
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/canonical-a54e9f8-20260617-010047/e09125912c714c19ab7b8a5a9a684115/proof.json",
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/canonical-a54e9f8-20260617-010047/f6639d72db2b42a19ce13a5f2ccc74bc/proof.json"
+  ]
+}
