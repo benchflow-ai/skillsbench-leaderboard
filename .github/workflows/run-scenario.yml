@@ -791,17 +791,6 @@ jobs:
             mkdir -p shard-artifacts/shard-0
             mv shard-artifacts/private-proof-manifest-refs.json shard-artifacts/shard-0/
           fi
-          # Build expected file paths from shard count
-          shard_results=()
-          for i in $(seq 0 $(( ${NUM_SHARDS} - 1 ))); do
-            f="shard-artifacts/shard-${i}/results.json"
-            if [[ ! -f "$f" ]]; then
-              echo "ERROR: missing results for shard ${i}" >&2
-              ls -R shard-artifacts/ >&2 || true
-              exit 1
-            fi
-            shard_results+=("$f")
-          done
           python scripts/aggregate_shard_results.py \
             --shard-artifacts shard-artifacts \
             --num-shards "${NUM_SHARDS}" \
