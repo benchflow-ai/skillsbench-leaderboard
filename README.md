@@ -21,7 +21,7 @@ queries.
 The current AgentBeats promotion target is `skillsbench-v1.1`:
 
 - `task_sets/skillsbench-v1.1.json`: 87 public tasks generated from
-  `benchflow-ai/skillsbench@12ebd8653093e0734c7902835cb20c054196026c`.
+  `benchflow-ai/skillsbench@ffc7b000b40aa8a9bed9091c95d700c0f83c1e63`.
 - `prebuilt_images/skillsbench-v1.1.json`: digest-pinned public `linux/amd64`
   task environment images for all 87 task ids.
 - `deploy_bundles/skillsbench-v1.1.json`: source revision, runtime image
@@ -78,15 +78,15 @@ task set, such as `smoke`, for maintainer evidence runs.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:c305b974356603499594a5f34c883d164ad7684eaf6fd71c21c0c2ea30c33f94`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:bd4ef74ecc775e50eb70c0eff37579b3c259a928c71063b0ad4fdf06bd851f69`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:c305b974356603499594a5f34c883d164ad7684eaf6fd71c21c0c2ea30c33f94`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:bd4ef74ecc775e50eb70c0eff37579b3c259a928c71063b0ad4fdf06bd851f69`
 - standalone green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:44ad6ce284909737b8eae5ff1ba043cc0ad7b6244c811590b7ce60159b9fa30e`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:837317d4124be068a3bb894925b18cbd0388d81bc5d42ae3070915a44f9ba172`
 - purple baseline:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:07b930f8c412bb21e0c9027158a0336baaf495b7597fd9b9d91623feebaca8ce`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:22e671dc7ffd3ea75c7b829d16e6ff718ae18e3c13647c846205f3f7bb46a165`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:07b930f8c412bb21e0c9027158a0336baaf495b7597fd9b9d91623feebaca8ce`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:22e671dc7ffd3ea75c7b829d16e6ff718ae18e3c13647c846205f3f7bb46a165`
 - task environments:
   `prebuilt_images/skillsbench-v1.1.json`
 - deploy bundle:
@@ -97,6 +97,14 @@ The five `deploy-smoke-v1` task environment refs and all 87
 the shared `ghcr.io/benchflow-ai/skillsbench-task-env` GHCR package. The
 `skillsbench-v1.1` worker path verifies that every referenced prebuilt image is
 present and usable before running public-readiness evaluations.
+
+The refreshed `skillsbench-v1.1` prebuilt map combines new images for the 16
+changed task environments from source workflow run
+`https://github.com/benchflow-ai/skillsbench/actions/runs/27652719005` with the
+previously verified images for unchanged tasks. That source workflow failed only
+on the unchanged `earthquake-phase-association` task while downloading an
+external SeisBench model; its task digest and retained image digest did not
+change.
 
 ## Official Self-Run Evidence
 
@@ -254,7 +262,8 @@ gh workflow run run-scenario.yml \
   -f require_durable_private_proof=false
 ```
 
-Latest current-branch non-durable smoke evidence:
+Previous current-branch non-durable smoke evidence, before the refreshed
+`ffc7b000b40aa8a9bed9091c95d700c0f83c1e63` source artifacts:
 
 - workflow run:
   `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27650630569`
@@ -350,7 +359,7 @@ PY
 - `green-agent.json5` on `main` uses the digest-pinned v1.1 worker image and
   embedded 87-image prebuilt map from `deploy_bundles/skillsbench-v1.1.json`.
 - `task_sets/skillsbench-v1.1.json` has 87 public tasks and task-set digest
-  `sha256:0ca23b2cbf5a3a82c787600fa88b2b3c153f39c32929556929b4555b9ed1e1ea`.
+  `sha256:3c9432bb1a4bd1b66ddbc175bb1f43bf546f7de663d1b2aa0327a88bff7ecd39`.
 - Official `main` self-run succeeds with registered green and purple IDs.
 - Generated result has exactly five public flattened rows.
 - Public rows have `score_eligible: true`, `infra_failure_type: null`, and
