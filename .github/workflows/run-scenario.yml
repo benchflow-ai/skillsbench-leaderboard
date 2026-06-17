@@ -802,20 +802,14 @@ jobs:
             fi
             shard_results+=("$f")
           done
-          # Extract the registered purple AgentBeats ID from scenario metadata.
-          participants=$(npx json5 submission-scenario.json5 | jq -c '{agent: (.metadata.agentbeats_ids.baseline_agent // .metadata.agentbeats_ids.agent // "")}')
-          jq -s --argjson participants "$participants" '{
-            status: (if all(.[]; .status == "completed") then "completed"
-                    elif any(.[]; .status == "completed") then "partial"
-                    else "failed" end),
-            participants: $participants,
-            results: [
-              .[]
-              | .results[]
-              | if type == "object" and (.results | type == "array") then .results[] else . end
-              | select(type == "object")
-            ]
-          }' "${shard_results[@]}" > results.json
+          python scripts/aggregate_shard_results.py \
+            --shard-artifacts shard-artifacts \
+            --num-shards "${NUM_SHARDS}" \
+            --scenario submission-scenario.json5 \
+            --output results.json
+          validate_dir="$(mktemp -d)"
+          cp results.json "${validate_dir}/result.json"
+          python scripts/validate_results_schema.py "${validate_dir}"
 
       - name: Validate and merge provenance
         run: |
