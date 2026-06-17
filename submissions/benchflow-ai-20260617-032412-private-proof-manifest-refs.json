@@ -1,0 +1,7 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/sandbox-a2a-smoke-d7e680e-20260617T031631Z",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/sandbox-a2a-smoke-d7e680e-20260617T031631Z/00314b1339aa451fa63b2a747803411d/proof.json"
+  ]
+}
