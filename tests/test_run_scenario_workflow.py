@@ -26,6 +26,17 @@ class RunScenarioWorkflowTests(unittest.TestCase):
         self.assertGreater(config_updates, 0)
         self.assertEqual(metadata_updates, config_updates)
 
+    def test_durable_private_proof_is_verified_after_publish(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "run-scenario.yml").read_text()
+
+        publish_index = workflow.index("- name: Publish private proof")
+        verify_index = workflow.index("- name: Verify published private proof")
+        upload_index = workflow.index("- name: Upload shard results")
+
+        self.assertLess(publish_index, verify_index)
+        self.assertLess(verify_index, upload_index)
+        self.assertIn("python scripts/verify_private_proof.py --manifest", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()

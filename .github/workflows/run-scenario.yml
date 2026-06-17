@@ -631,6 +631,80 @@ jobs:
               ;;
           esac
 
+      - name: Verify published private proof
+        if: ${{ inputs.require_durable_private_proof }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID || '' }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY || '' }}
+          AWS_SESSION_TOKEN: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_SESSION_TOKEN || secrets.AWS_SESSION_TOKEN || '' }}
+          AWS_REGION: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_REGION || secrets.AWS_REGION || 'us-east-1' }}
+          AWS_ENDPOINT_URL_S3: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_S3_ENDPOINT_URL || secrets.AWS_ENDPOINT_URL_S3 || '' }}
+          R2_ENDPOINT_URL: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL || secrets.R2_ENDPOINT_URL || '' }}
+        run: |
+          set -euo pipefail
+          refs_file="${AMBER_COMPOSE_DIR}/output/private-proof-manifest-refs.json"
+          download_root="${RUNNER_TEMP}/skillsbench-private-proof-download"
+          rm -rf "${download_root}"
+          mkdir -p "${download_root}"
+          if [[ ! -f "${refs_file}" ]]; then
+            echo "durable private proof is required but no private proof refs were produced" >&2
+            exit 1
+          fi
+          index=0
+          while IFS= read -r ref; do
+            [[ -n "${ref}" ]] || continue
+            proof_id="${ref%/proof.json}"
+            proof_id="${proof_id##*/}"
+            dest="${download_root}/${proof_id}"
+            mkdir -p "${dest}"
+            case "${ref}" in
+              s3://*)
+                if ! command -v aws >/dev/null 2>&1; then
+                  python -m pip install --user awscli
+                  export PATH="${HOME}/.local/bin:${PATH}"
+                fi
+                source_uri="${ref%/proof.json}/"
+                if [[ -n "${AWS_ENDPOINT_URL_S3}" ]]; then
+                  aws configure set default.s3.addressing_style path
+                  aws s3 cp --only-show-errors --recursive "${source_uri}" "${dest}/" --endpoint-url "${AWS_ENDPOINT_URL_S3}"
+                else
+                  aws s3 cp --only-show-errors --recursive "${source_uri}" "${dest}/"
+                fi
+                ;;
+              r2://*)
+                if ! command -v aws >/dev/null 2>&1; then
+                  python -m pip install --user awscli
+                  export PATH="${HOME}/.local/bin:${PATH}"
+                fi
+                endpoint="${R2_ENDPOINT_URL:-${AWS_ENDPOINT_URL_S3:-}}"
+                if [[ -z "${endpoint}" ]]; then
+                  echo "r2:// private proof verification requires SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL or R2_ENDPOINT_URL" >&2
+                  exit 1
+                fi
+                source_uri="s3://${ref#r2://}"
+                source_uri="${source_uri%/proof.json}/"
+                aws s3 cp --only-show-errors --recursive "${source_uri}" "${dest}/" --endpoint-url "${endpoint}"
+                ;;
+              gs://*)
+                if ! command -v gcloud >/dev/null 2>&1; then
+                  echo "gs:// private proof verification requires gcloud on the runner" >&2
+                  exit 1
+                fi
+                gcloud storage cp --recursive "${ref%/proof.json}/*" "${dest}/"
+                ;;
+              *)
+                echo "unsupported private proof ref for verification: ${ref}" >&2
+                exit 1
+                ;;
+            esac
+            index=$((index + 1))
+          done < <(jq -r '.private_proof_manifest_refs[]' "${refs_file}")
+          if [[ "${index}" -eq 0 ]]; then
+            echo "durable private proof is required but no private proof refs were produced" >&2
+            exit 1
+          fi
+          python scripts/verify_private_proof.py --manifest "${refs_file}" --proof-root "${download_root}"
+
       - name: Stop scenario
         if: always()
         run: docker compose -f "${AMBER_COMPOSE_DIR}/compose.yaml" -p "${AMBER_COMPOSE_PROJECT}" down -v --remove-orphans || true
