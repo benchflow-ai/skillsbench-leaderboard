@@ -57,21 +57,22 @@ provider_key_names() {
 agent_harness="${AGENT_HARNESS:-openhands}"
 agent_model="${AGENT_MODEL:-gemini/gemini-3.5-flash}"
 agent_timeout_sec="${AGENT_TIMEOUT_SEC:-900}"
-selected_key="${AGENT_UNDER_TEST_API_KEY:-}"
+selected_key=""
 
+provider="$(provider_from_model "${agent_model}")"
+for name in $(provider_key_names "${provider}"); do
+  candidate="${!name:-}"
+  if [[ -n "${candidate}" ]]; then
+    selected_key="${candidate}"
+    break
+  fi
+done
 if [[ -z "${selected_key}" ]]; then
-  provider="$(provider_from_model "${agent_model}")"
-  for name in $(provider_key_names "${provider}"); do
-    candidate="${!name:-}"
-    if [[ -n "${candidate}" ]]; then
-      selected_key="${candidate}"
-      break
-    fi
-  done
+  selected_key="${AGENT_UNDER_TEST_API_KEY:-}"
 fi
 
 if ! export_secret API_KEY "${selected_key}"; then
-  echo "Missing agent-under-test API secret for model '${agent_model}'. Set AGENT_UNDER_TEST__API_KEY or the matching provider secret." >&2
+  echo "Missing agent-under-test API secret for model '${agent_model}'. Set the matching provider secret or AGENT_UNDER_TEST__API_KEY." >&2
   exit 1
 fi
 
