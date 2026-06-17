@@ -1,0 +1,7 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/gemini-cli-smoke-a54e9f8-20260617-015100",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/gemini-cli-smoke-a54e9f8-20260617-015100/321d2149a5f34574a9e42757ddeb3cc9/proof.json"
+  ]
+}
