@@ -110,6 +110,7 @@ jobs:
       AMBER_COMPOSE_DIR: amber-compose
       AMBER_COMPOSE_PROJECT: amber-scenario-${{ github.run_id }}-${{ github.run_attempt }}-shard-${{ matrix.shard_index }}
       AMBER_PROXY_PORT: "18080"
+      AMBER_PARTICIPANT_PROXY_PORT: "18081"
       RESULTS_TIMEOUT_MINUTES: ${{ vars.RUN_SCENARIO_TIMEOUT_MINUTES || '300' }}
 
     steps:
@@ -227,6 +228,10 @@ jobs:
             echo "private proof overrides require require_durable_private_proof=true" >&2
             exit 1
           fi
+          docker_bridge_host="$(ip -4 addr show docker0 2>/dev/null | awk '/inet / {print $2; exit}' | cut -d/ -f1)"
+          docker_bridge_host="${docker_bridge_host:-172.17.0.1}"
+          sandbox_participant_proxy_url="http://${docker_bridge_host}:${AMBER_PARTICIPANT_PROXY_PORT}"
+          echo "Using sandbox participant proxy URL ${sandbox_participant_proxy_url}"
           npx json5 "${SCENARIO_PATH}" | jq \
             --argjson shard_index ${{ matrix.shard_index }} \
             --argjson num_shards ${NUM_SHARDS} \
@@ -238,6 +243,7 @@ jobs:
             --argjson require_durable_private_proof "${REQUIRE_DURABLE_PRIVATE_PROOF}" \
             --arg private_proof_uri_prefix "${PRIVATE_PROOF_URI_PREFIX}" \
             --arg private_proof_retention "${PRIVATE_PROOF_RETENTION}" \
+            --arg sandbox_participant_proxy_url "${sandbox_participant_proxy_url}" \
             '
              .components.gateway.config.assessment_config.shard_index = $shard_index |
              .components.gateway.config.assessment_config.num_shards = $num_shards |
@@ -259,6 +265,12 @@ jobs:
                .components.skillsbench_green.config.prebuilt_images = ($prebuilt_manifest | tojson)
              elif $prebuilt_manifest then
                error("prebuilt_images require a skillsbench_worker or skillsbench_green component")
+             else . end |
+             if .components.skillsbench_worker? != null then
+               .components.skillsbench_worker.config.sandbox_participant_proxy_url = $sandbox_participant_proxy_url
+             else . end |
+             if .components.skillsbench_green? != null then
+               .components.skillsbench_green.config.sandbox_participant_proxy_url = $sandbox_participant_proxy_url
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
@@ -376,9 +388,13 @@ jobs:
           "${compose[@]}" logs -f --no-color &
           logs_pid=$!
 
+          docker_bridge_host="$(ip -4 addr show docker0 2>/dev/null | awk '/inet / {print $2; exit}' | cut -d/ -f1)"
+          docker_bridge_host="${docker_bridge_host:-172.17.0.1}"
+
           amber proxy "${AMBER_COMPOSE_DIR}" \
             --project-name "${AMBER_COMPOSE_PROJECT}" \
-            --export "results=127.0.0.1:${AMBER_PROXY_PORT}" > amber-proxy.log 2>&1 &
+            --export "results=127.0.0.1:${AMBER_PROXY_PORT}" \
+            --export "participant_proxy=${docker_bridge_host}:${AMBER_PARTICIPANT_PROXY_PORT}" > amber-proxy.log 2>&1 &
           proxy_pid=$!
 
           poll_url="http://127.0.0.1:${AMBER_PROXY_PORT}/"

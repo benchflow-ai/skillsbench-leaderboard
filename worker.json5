@@ -15,6 +15,7 @@
       private_proof_uri_prefix: { type: "string" },
       private_proof_retention: { type: "string" },
       require_durable_private_proof: { type: "boolean" },
+      sandbox_participant_proxy_url: { type: "string" },
       jobs_dir: { type: "string" },
       environment: { type: "string" },
     },
@@ -39,7 +40,7 @@
   },
 
   program: {
-    image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:bd4ef74ecc775e50eb70c0eff37579b3c259a928c71063b0ad4fdf06bd851f69",
+    image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:eba5b93ed2a71f2d947381d8308c53fcdd8ade0150351f293276120001f070c1",
     entrypoint: [
       "uv",
       "run",
@@ -77,6 +78,10 @@
       SKILLSBENCH_WORKER_PARTICIPANT_PROXY_URL: {
         when: "slots.proxy",
         value: "${slots.proxy.url}",
+      },
+      SKILLSBENCH_WORKER_SANDBOX_PARTICIPANT_PROXY_URL: {
+        when: "config.sandbox_participant_proxy_url",
+        value: "${config.sandbox_participant_proxy_url}",
       },
     },
     mounts: [
