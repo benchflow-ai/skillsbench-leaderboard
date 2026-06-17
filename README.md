@@ -24,9 +24,9 @@ The current AgentBeats promotion target is `skillsbench-v1.1`:
   `benchflow-ai/skillsbench@ffc7b000b40aa8a9bed9091c95d700c0f83c1e63`.
 - `prebuilt_images/skillsbench-v1.1.json`: digest-pinned public `linux/amd64`
   task environment images for all 87 task ids.
-- `deploy_bundles/skillsbench-v1.1.json`: source revision, runtime image
-  digests, task-set digest, and 87 prebuilt task image refs in one reviewable
-  bundle.
+- `deploy_bundles/skillsbench-v1.1.json`: runtime source revision
+  `8375bfcaddd7bded27d740fcf878f38a60fc4e10`, runtime image digests, task-set
+  digest, and 87 prebuilt task image refs in one reviewable bundle.
 
 `green-agent.json5` is the registered AgentBeats green manifest. It embeds the
 worker process, defaults to `skillsbench-v1.1`, shards the 87-task set across
@@ -66,8 +66,9 @@ task set, such as `smoke`, for maintainer evidence runs.
   map.
 - `prebuilt_images/skillsbench-v1.1.json`: full digest-pinned task-image map
   for `skillsbench-v1.1`.
-- `deploy_bundles/skillsbench-v1.1.json`: deploy-ready bundle tying the source
-  revision, runtime image digests, task-set digest, and 87 prebuilt task images.
+- `deploy_bundles/skillsbench-v1.1.json`: deploy-ready bundle tying the runtime
+  source revision, runtime image digests, task-set digest, and 87 prebuilt task
+  images.
 - `queries/*.sql`: DuckDB leaderboard queries. The first column is the
   AgentBeats purple-agent UUID.
 - `results/`: merged public result JSON files read by AgentBeats.
@@ -78,15 +79,15 @@ task set, such as `smoke`, for maintainer evidence runs.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:bd4ef74ecc775e50eb70c0eff37579b3c259a928c71063b0ad4fdf06bd851f69`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:1dfae34a118b34f7e61996d5511a4d15b30f2d7e88641e9563c3670ff46de61c`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:bd4ef74ecc775e50eb70c0eff37579b3c259a928c71063b0ad4fdf06bd851f69`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:1dfae34a118b34f7e61996d5511a4d15b30f2d7e88641e9563c3670ff46de61c`
 - standalone green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:837317d4124be068a3bb894925b18cbd0388d81bc5d42ae3070915a44f9ba172`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:cca57e094625e113173f2a8baab8c5c8d9fb193cfb95320448b4588c34d9606b`
 - purple baseline:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:22e671dc7ffd3ea75c7b829d16e6ff718ae18e3c13647c846205f3f7bb46a165`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:94bc2d38c20baaddf95455c9eb94dea5990898bb3fc49cff29f7ef1acbef2b23`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:22e671dc7ffd3ea75c7b829d16e6ff718ae18e3c13647c846205f3f7bb46a165`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:94bc2d38c20baaddf95455c9eb94dea5990898bb3fc49cff29f7ef1acbef2b23`
 - task environments:
   `prebuilt_images/skillsbench-v1.1.json`
 - deploy bundle:
