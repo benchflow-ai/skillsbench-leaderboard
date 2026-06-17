@@ -1,0 +1,33 @@
+{
+  "status": "completed",
+  "participants": {
+    "agent": ""
+  },
+  "results": [
+    {
+      "task_id": "dialogue-parser",
+      "trial_id": "dialogue-parser__agentbeats__2e98b0c9",
+      "task_set": "agentbeats-real-model-smoke-v1",
+      "task_set_digest": "sha256:2203e4958737439e8a3eda3733522d9160e25fb269f60abda6a77b14d6bd3968",
+      "condition": "with_skills",
+      "score_eligible": true,
+      "passed": false,
+      "reward": 0.0,
+      "max_score": 1.0,
+      "time_used": 71.505,
+      "task_digest": "sha256:c9361a9e266a472b8c01517d5425697ffd8bf365882d6e83b87d38e8a32ad7e8",
+      "category": "software-engineering",
+      "difficulty": "easy",
+      "tags": [
+        "game development",
+        "parsing"
+      ],
+      "has_skills": true,
+      "agent_transport": "a2a",
+      "participant_role": "agent",
+      "infra_failure_type": null,
+      "error_type": null,
+      "artifact_refs": []
+    }
+  ]
+}
