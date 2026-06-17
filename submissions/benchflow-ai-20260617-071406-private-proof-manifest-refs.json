@@ -1,0 +1,13 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-deepseek4flash-e6ab0a2f-a48f8c0",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-e6ab0a2f-a48f8c0/1b28f4a4e42942dfb69cb645f4f5e0fe/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-e6ab0a2f-a48f8c0/67b93e2f0b09426d86059dd29d1d2717/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-e6ab0a2f-a48f8c0/7769b0e4cacb41d19e49f8a5b0643426/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-e6ab0a2f-a48f8c0/89b1cdf2c20341d8bce46d6df0758a41/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-e6ab0a2f-a48f8c0/8fa2072cda174d21a0c222c8c6742271/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-e6ab0a2f-a48f8c0/b584e76654304e91b680e88c06896444/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-e6ab0a2f-a48f8c0/dbe7aa3aa56f4a8294c36dbed5b4ae1b/proof.json"
+  ]
+}
