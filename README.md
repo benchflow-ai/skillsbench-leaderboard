@@ -79,15 +79,15 @@ task set, such as `smoke`, for maintainer evidence runs.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:c554fbc2570fe60221271e0b141eedc64c892d2863a5a50f415245a761f840f4`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:26c6cc2af12a89c557b5e2f664fa241ab2bec014b2c9e9ee9f2dde5b71679495`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:c554fbc2570fe60221271e0b141eedc64c892d2863a5a50f415245a761f840f4`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:26c6cc2af12a89c557b5e2f664fa241ab2bec014b2c9e9ee9f2dde5b71679495`
 - standalone green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:b8fd96c49af1f9b014ca6c875be2b41f1397f4742751a6e54816e53e177465a2`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:22ca32d9da88bddcf4b9f21d3b6edbe68dcd1dc8b578b572a0ffc7414f7ad19e`
 - purple baseline:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:09899b4e249c720469cba739d0cb8ecb6c2c793fbae89d86a0b75d4dd51c4b21`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:ab6b8e88a0df74f5d44f5c59cc52695a30dd15b3a94a11b38785ddf4ae0bede1`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:09899b4e249c720469cba739d0cb8ecb6c2c793fbae89d86a0b75d4dd51c4b21`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:ab6b8e88a0df74f5d44f5c59cc52695a30dd15b3a94a11b38785ddf4ae0bede1`
 - task environments:
   `prebuilt_images/skillsbench-v1.1.json`
 - deploy bundle:
