@@ -1,0 +1,7 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-deepseek4flash-citation-check-v1.1-20260617-210617",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-citation-check-v1.1-20260617-210617/2f36750521c5405aa0dc529b00fe7603/proof.json"
+  ]
+}
