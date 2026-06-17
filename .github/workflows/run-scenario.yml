@@ -510,6 +510,15 @@ jobs:
               if docker cp "${cid}:/home/worker/jobs/agentbeats-private-proof/." "${PRIVATE_PROOF_ROOT}/" 2>/dev/null; then
                 collected=1
               fi
+              while IFS= read -r agent_log; do
+                [[ -n "${agent_log}" ]] || continue
+                rel="${agent_log#/home/worker/jobs/agentbeats-worker/}"
+                dest="${AMBER_COMPOSE_DIR}/output/agent-logs/${cid}/${rel}"
+                mkdir -p "$(dirname "${dest}")"
+                docker cp "${cid}:${agent_log}" "${dest}" 2>/dev/null || true
+              done < <(
+                docker exec "${cid}" sh -lc 'find /home/worker/jobs/agentbeats-worker -path "*/agent/*.txt" -type f 2>/dev/null' 2>/dev/null || true
+              )
             done
           done
           if [[ "${collected}" != "1" ]]; then
@@ -634,6 +643,7 @@ jobs:
             ${{ env.AMBER_COMPOSE_DIR }}/output/provenance.json
             ${{ env.AMBER_COMPOSE_DIR }}/output/private-proof-manifest-refs.json
             ${{ env.AMBER_COMPOSE_DIR }}/output/amber-proxy.log
+            ${{ env.AMBER_COMPOSE_DIR }}/output/agent-logs
 
   summary:
     needs: [setup, eval]
