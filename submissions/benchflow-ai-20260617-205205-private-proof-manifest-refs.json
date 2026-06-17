@@ -1,0 +1,13 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-deepseek4flash-skillsbench-v1.1-full-20260617-202313",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-skillsbench-v1.1-full-20260617-202313/05061583fe004b98af00bfa277385948/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-skillsbench-v1.1-full-20260617-202313/140086a5720d4dc1898a07245d969038/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-skillsbench-v1.1-full-20260617-202313/ba919b7f1cdb4384a1939918cac930cd/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-skillsbench-v1.1-full-20260617-202313/c75ea50e10d5468e98b7a86cb1be0786/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-skillsbench-v1.1-full-20260617-202313/d6a0d03262fd4386a6e5b6d03b7a72f5/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-skillsbench-v1.1-full-20260617-202313/e3c57aadb5af4cf59f472335ebc98956/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4flash-skillsbench-v1.1-full-20260617-202313/ecaab926c95647ab9c6a3d68261e434c/proof.json"
+  ]
+}
