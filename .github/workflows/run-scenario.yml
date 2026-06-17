@@ -30,11 +30,11 @@ on:
         default: ""
         type: string
       require_durable_private_proof:
-        description: "Require durable private-proof settings for the worker"
+        description: "Require durable private-proof settings for the SkillsBench worker"
         default: false
         type: boolean
       private_proof_uri_prefix:
-        description: "Durable private proof URI prefix (s3://, gs://, r2://, or https://)"
+        description: "Durable private proof URI prefix (s3://, gs://, or r2://)"
         default: ""
         type: string
       private_proof_retention:
@@ -98,10 +98,14 @@ jobs:
       fail-fast: false
 
     permissions:
+      id-token: write
       contents: read
 
     env:
       NUM_SHARDS: ${{ needs.setup.outputs.num_shards }}
+      GCP_PROJECT_ID: ${{ vars.SKILLSBENCH_GCP_PROJECT_ID || vars.GCP_PROJECT_ID || 'skillsbench' }}
+      GCP_WIF_PROVIDER: ${{ vars.SKILLSBENCH_GCP_WIF_PROVIDER || vars.GCP_WIF_PROVIDER || '' }}
+      GCP_SERVICE_ACCOUNT: ${{ vars.SKILLSBENCH_PRIVATE_PROOF_GCP_SERVICE_ACCOUNT || vars.GCP_SERVICE_ACCOUNT || '' }}
       AMBER_IMAGE: ghcr.io/rdi-foundation/amber-cli:v0.3
       AMBER_COMPOSE_DIR: amber-compose
       AMBER_COMPOSE_PROJECT: amber-scenario-${{ github.run_id }}-${{ github.run_attempt }}-shard-${{ matrix.shard_index }}
@@ -171,7 +175,7 @@ jobs:
           set -euo pipefail
           uuid_re='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'
           task_set_re='^[A-Za-z0-9_.-]+$'
-          durable_uri_re='^(s3|gs|r2|https)://'
+          durable_uri_re='^(s3|gs|r2)://'
           if [[ -n "${GREEN_AGENT_ID}" && ! "${GREEN_AGENT_ID}" =~ ${uuid_re} ]]; then
             echo "green_agent_id must be a registered AgentBeats UUID" >&2
             exit 1
@@ -204,7 +208,7 @@ jobs:
           fi
           if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
             if [[ ! "${PRIVATE_PROOF_URI_PREFIX}" =~ ${durable_uri_re} ]]; then
-              echo "private_proof_uri_prefix must use s3://, gs://, r2://, or https:// when durable proof is required" >&2
+              echo "private_proof_uri_prefix must use s3://, gs://, or r2:// when durable proof is required by this workflow" >&2
               exit 1
             fi
             if [[ "${PRIVATE_PROOF_URI_PREFIX}" =~ [?#] ]]; then
@@ -251,8 +255,10 @@ jobs:
              else . end |
              if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+             elif $prebuilt_manifest and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.prebuilt_images = ($prebuilt_manifest | tojson)
              elif $prebuilt_manifest then
-               error("prebuilt_images require a skillsbench_worker component")
+               error("prebuilt_images require a skillsbench_worker or skillsbench_green component")
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
@@ -264,8 +270,12 @@ jobs:
                .components.skillsbench_worker.config.require_durable_private_proof = true |
                .components.skillsbench_worker.config.private_proof_uri_prefix = $private_proof_uri_prefix |
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
+             elif $require_durable_private_proof and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.require_durable_private_proof = true |
+               .components.skillsbench_green.config.private_proof_uri_prefix = $private_proof_uri_prefix |
+               .components.skillsbench_green.config.private_proof_retention = $private_proof_retention
              elif $require_durable_private_proof then
-               error("durable private proof requires a skillsbench_worker component")
+               error("durable private proof requires a skillsbench_worker or skillsbench_green component")
              else . end
             ' > patched.json
           mv patched.json "${SCENARIO_PATH}"
@@ -411,6 +421,137 @@ jobs:
           fi
         timeout-minutes: 300
 
+      - name: Collect private proof
+        if: always()
+        env:
+          REQUIRE_DURABLE_PRIVATE_PROOF: ${{ inputs.require_durable_private_proof && 'true' || 'false' }}
+          PRIVATE_PROOF_URI_PREFIX: ${{ inputs.private_proof_uri_prefix || '' }}
+          PRIVATE_PROOF_ROOT: ${{ runner.temp }}/skillsbench-private-proof
+        run: |
+          set -euo pipefail
+          rm -rf "${PRIVATE_PROOF_ROOT}"
+          mkdir -p "${PRIVATE_PROOF_ROOT}" "${AMBER_COMPOSE_DIR}/output"
+          collected=0
+          for moniker in /skillsbench_green /skillsbench_worker; do
+            mapfile -t containers < <(
+              docker ps -aq \
+                --filter "label=com.docker.compose.project=${AMBER_COMPOSE_PROJECT}" \
+                --filter "label=amber_component_moniker=${moniker}"
+            )
+            for cid in "${containers[@]}"; do
+              if docker cp "${cid}:/home/worker/jobs/agentbeats-private-proof/." "${PRIVATE_PROOF_ROOT}/" 2>/dev/null; then
+                collected=1
+              fi
+            done
+          done
+          if [[ "${collected}" != "1" ]]; then
+            if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
+              echo "durable private proof is required but no worker proof directory was collected" >&2
+              exit 1
+            fi
+            echo "No worker private proof directory was available to collect."
+            exit 0
+          fi
+          if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
+            python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          proof_root = Path(os.environ["PRIVATE_PROOF_ROOT"])
+          prefix = os.environ["PRIVATE_PROOF_URI_PREFIX"].rstrip("/")
+          refs = [
+              f"{prefix}/{path.relative_to(proof_root).as_posix()}"
+              for path in sorted(proof_root.glob("*/proof.json"))
+          ]
+          if not refs:
+              raise SystemExit("durable private proof is required but no proof.json manifests were collected")
+          Path(os.environ["AMBER_COMPOSE_DIR"], "output", "private-proof-manifest-refs.json").write_text(
+              json.dumps({"private_proof_manifest_refs": refs}, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+          fi
+
+      - name: Validate GCP private proof auth
+        if: ${{ always() && inputs.require_durable_private_proof && startsWith(inputs.private_proof_uri_prefix, 'gs://') }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GCP_WIF_PROVIDER}" ]]; then
+            echo "gs:// private proof publishing requires SKILLSBENCH_GCP_WIF_PROVIDER or GCP_WIF_PROVIDER" >&2
+            exit 1
+          fi
+          if [[ -z "${GCP_SERVICE_ACCOUNT}" ]]; then
+            echo "gs:// private proof publishing requires SKILLSBENCH_PRIVATE_PROOF_GCP_SERVICE_ACCOUNT or GCP_SERVICE_ACCOUNT" >&2
+            exit 1
+          fi
+
+      - name: Authenticate to GCP for private proof
+        if: ${{ always() && inputs.require_durable_private_proof && startsWith(inputs.private_proof_uri_prefix, 'gs://') }}
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.GCP_SERVICE_ACCOUNT }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Set up gcloud for private proof
+        if: ${{ always() && inputs.require_durable_private_proof && startsWith(inputs.private_proof_uri_prefix, 'gs://') }}
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Publish private proof
+        if: ${{ always() && inputs.require_durable_private_proof }}
+        env:
+          PRIVATE_PROOF_URI_PREFIX: ${{ inputs.private_proof_uri_prefix || '' }}
+          PRIVATE_PROOF_ROOT: ${{ runner.temp }}/skillsbench-private-proof
+          AWS_ACCESS_KEY_ID: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID || '' }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY || '' }}
+          AWS_SESSION_TOKEN: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_SESSION_TOKEN || secrets.AWS_SESSION_TOKEN || '' }}
+          AWS_REGION: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_REGION || secrets.AWS_REGION || 'us-east-1' }}
+          AWS_ENDPOINT_URL_S3: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_S3_ENDPOINT_URL || secrets.AWS_ENDPOINT_URL_S3 || '' }}
+          R2_ENDPOINT_URL: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL || secrets.R2_ENDPOINT_URL || '' }}
+        run: |
+          set -euo pipefail
+          if [[ ! -d "${PRIVATE_PROOF_ROOT}" ]] || ! find "${PRIVATE_PROOF_ROOT}" -mindepth 2 -name proof.json -print -quit | grep -q .; then
+            echo "durable private proof is required but no collected proof.json manifests exist" >&2
+            exit 1
+          fi
+          case "${PRIVATE_PROOF_URI_PREFIX}" in
+            s3://*)
+              if ! command -v aws >/dev/null 2>&1; then
+                python -m pip install --user awscli
+                export PATH="${HOME}/.local/bin:${PATH}"
+              fi
+              if [[ -n "${AWS_ENDPOINT_URL_S3}" ]]; then
+                aws configure set default.s3.addressing_style path
+                aws s3 sync --only-show-errors "${PRIVATE_PROOF_ROOT}/" "${PRIVATE_PROOF_URI_PREFIX%/}/" --endpoint-url "${AWS_ENDPOINT_URL_S3}"
+              else
+                aws s3 sync --only-show-errors "${PRIVATE_PROOF_ROOT}/" "${PRIVATE_PROOF_URI_PREFIX%/}/"
+              fi
+              ;;
+            r2://*)
+              if ! command -v aws >/dev/null 2>&1; then
+                python -m pip install --user awscli
+                export PATH="${HOME}/.local/bin:${PATH}"
+              fi
+              endpoint="${R2_ENDPOINT_URL:-${AWS_ENDPOINT_URL_S3:-}}"
+              if [[ -z "${endpoint}" ]]; then
+                echo "r2:// private proof publishing requires SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL or R2_ENDPOINT_URL" >&2
+                exit 1
+              fi
+              aws s3 sync --only-show-errors "${PRIVATE_PROOF_ROOT}/" "s3://${PRIVATE_PROOF_URI_PREFIX#r2://}/" --endpoint-url "${endpoint}"
+              ;;
+            gs://*)
+              if ! command -v gcloud >/dev/null 2>&1; then
+                echo "gs:// private proof publishing requires gcloud on the runner" >&2
+                exit 1
+              fi
+              gcloud storage cp --recursive "${PRIVATE_PROOF_ROOT}/*" "${PRIVATE_PROOF_URI_PREFIX%/}/"
+              ;;
+            *)
+              echo "unsupported private_proof_uri_prefix for workflow publishing: ${PRIVATE_PROOF_URI_PREFIX}" >&2
+              exit 1
+              ;;
+          esac
+
       - name: Stop scenario
         if: always()
         run: docker compose -f "${AMBER_COMPOSE_DIR}/compose.yaml" -p "${AMBER_COMPOSE_PROJECT}" down -v --remove-orphans || true
@@ -423,6 +564,7 @@ jobs:
           path: |
             ${{ env.AMBER_COMPOSE_DIR }}/output/results.json
             ${{ env.AMBER_COMPOSE_DIR }}/output/provenance.json
+            ${{ env.AMBER_COMPOSE_DIR }}/output/private-proof-manifest-refs.json
 
   summary:
     needs: [setup, eval]
@@ -455,7 +597,7 @@ jobs:
           set -euo pipefail
           uuid_re='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$'
           task_set_re='^[A-Za-z0-9_.-]+$'
-          durable_uri_re='^(s3|gs|r2|https)://'
+          durable_uri_re='^(s3|gs|r2)://'
           if [[ -n "${GREEN_AGENT_ID}" && ! "${GREEN_AGENT_ID}" =~ ${uuid_re} ]]; then
             echo "green_agent_id must be a registered AgentBeats UUID" >&2
             exit 1
@@ -488,7 +630,7 @@ jobs:
           fi
           if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
             if [[ ! "${PRIVATE_PROOF_URI_PREFIX}" =~ ${durable_uri_re} ]]; then
-              echo "private_proof_uri_prefix must use s3://, gs://, r2://, or https:// when durable proof is required" >&2
+              echo "private_proof_uri_prefix must use s3://, gs://, or r2:// when durable proof is required by this workflow" >&2
               exit 1
             fi
             if [[ "${PRIVATE_PROOF_URI_PREFIX}" =~ [?#] ]]; then
@@ -533,8 +675,10 @@ jobs:
              else . end |
              if $prebuilt_manifest and (.components.skillsbench_worker? != null) then
                .components.skillsbench_worker.config.prebuilt_images = ($prebuilt_manifest | tojson)
+             elif $prebuilt_manifest and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.prebuilt_images = ($prebuilt_manifest | tojson)
              elif $prebuilt_manifest then
-               error("prebuilt_images require a skillsbench_worker component")
+               error("prebuilt_images require a skillsbench_worker or skillsbench_green component")
              else . end |
              if $num_instances then .components.gateway.config.assessment_config.num_instances = $num_instances else . end |
              if $green_agent_id != "" then .metadata.agentbeats_ids.skillsbench_green = $green_agent_id else . end |
@@ -546,8 +690,12 @@ jobs:
                .components.skillsbench_worker.config.require_durable_private_proof = true |
                .components.skillsbench_worker.config.private_proof_uri_prefix = $private_proof_uri_prefix |
                .components.skillsbench_worker.config.private_proof_retention = $private_proof_retention
+             elif $require_durable_private_proof and (.components.skillsbench_green? != null) then
+               .components.skillsbench_green.config.require_durable_private_proof = true |
+               .components.skillsbench_green.config.private_proof_uri_prefix = $private_proof_uri_prefix |
+               .components.skillsbench_green.config.private_proof_retention = $private_proof_retention
              elif $require_durable_private_proof then
-               error("durable private proof requires a skillsbench_worker component")
+               error("durable private proof requires a skillsbench_worker or skillsbench_green component")
              else . end
             ' > submission-scenario.json5
 
@@ -559,6 +707,10 @@ jobs:
             mkdir -p shard-artifacts/shard-0
             mv shard-artifacts/results.json shard-artifacts/shard-0/
             mv shard-artifacts/provenance.json shard-artifacts/shard-0/ 2>/dev/null || true
+          fi
+          if [[ -f "shard-artifacts/private-proof-manifest-refs.json" && ! -f "shard-artifacts/shard-0/private-proof-manifest-refs.json" ]]; then
+            mkdir -p shard-artifacts/shard-0
+            mv shard-artifacts/private-proof-manifest-refs.json shard-artifacts/shard-0/
           fi
           # Build expected file paths from shard count
           shard_results=()
@@ -631,6 +783,50 @@ jobs:
           echo "Provenance:"
           cat provenance.json
 
+      - name: Aggregate private proof refs
+        env:
+          REQUIRE_DURABLE_PRIVATE_PROOF: ${{ inputs.require_durable_private_proof && 'true' || 'false' }}
+          PRIVATE_PROOF_URI_PREFIX: ${{ inputs.private_proof_uri_prefix || '' }}
+          PRIVATE_PROOF_RETENTION: ${{ inputs.private_proof_retention || '' }}
+        run: |
+          set -euo pipefail
+          proof_ref_files=()
+          for i in $(seq 0 $(( ${NUM_SHARDS} - 1 ))); do
+            f="shard-artifacts/shard-${i}/private-proof-manifest-refs.json"
+            if [[ -f "$f" ]]; then
+              proof_ref_files+=("$f")
+            elif [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
+              echo "ERROR: missing private proof refs for shard ${i}" >&2
+              ls -R shard-artifacts/ >&2 || true
+              exit 1
+            fi
+          done
+          if [[ "${#proof_ref_files[@]}" -eq 0 ]]; then
+            if [[ "${REQUIRE_DURABLE_PRIVATE_PROOF}" == "true" ]]; then
+              echo "ERROR: durable private proof was required but no private proof refs were produced" >&2
+              exit 1
+            fi
+            rm -f private-proof-manifest-refs.json
+            exit 0
+          fi
+          jq -s \
+            --arg private_proof_storage "${PRIVATE_PROOF_URI_PREFIX%/}" \
+            --arg private_proof_retention "${PRIVATE_PROOF_RETENTION}" \
+            '{
+              private_proof_storage: $private_proof_storage,
+              private_proof_retention: $private_proof_retention,
+              private_proof_manifest_refs: ([.[].private_proof_manifest_refs[]] | unique)
+            }' "${proof_ref_files[@]}" > private-proof-manifest-refs.json
+          jq -e '
+            .private_proof_storage as $storage |
+            ($storage | type == "string" and length > 0) and
+            (.private_proof_retention | type == "string" and length > 0) and
+            (.private_proof_manifest_refs | type == "array" and length > 0) and
+            all(.private_proof_manifest_refs[]; type == "string" and startswith($storage + "/") and endswith("/proof.json"))
+          ' private-proof-manifest-refs.json >/dev/null
+          echo "Private proof manifest refs:"
+          cat private-proof-manifest-refs.json
+
       - name: Generate submission metadata
         id: metadata
         run: |
@@ -666,6 +862,10 @@ jobs:
           mv results.json "results/${UNIQUE_NAME}.json"
           mv provenance.json "submissions/${UNIQUE_NAME}-provenance.json"
           git add "results/${UNIQUE_NAME}.json" "submissions/${UNIQUE_NAME}-provenance.json" "submissions/${UNIQUE_NAME}.json5"
+          if [[ -f private-proof-manifest-refs.json ]]; then
+            mv private-proof-manifest-refs.json "submissions/${UNIQUE_NAME}-private-proof-manifest-refs.json"
+            git add "submissions/${UNIQUE_NAME}-private-proof-manifest-refs.json"
+          fi
           git commit -m "Submission: ${UNIQUE_NAME}
 
           Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

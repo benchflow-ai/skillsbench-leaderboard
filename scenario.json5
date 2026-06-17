@@ -32,11 +32,11 @@
       },
     },
     skillsbench_green: {
-      manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/8e8e608fab452e6126432f1bfff51e8812ebff31/green-agent.json5",
+      manifest: "./green-agent.json5",
       config: {},
     },
     baseline_agent: {
-      manifest: "https://raw.githubusercontent.com/benchflow-ai/skillsbench-leaderboard/8e8e608fab452e6126432f1bfff51e8812ebff31/participant-placeholder.json5",
+      manifest: "./participant-placeholder.json5",
       config: {},
     },
   },
