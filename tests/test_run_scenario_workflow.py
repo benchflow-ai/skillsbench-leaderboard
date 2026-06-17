@@ -17,6 +17,15 @@ class RunScenarioWorkflowTests(unittest.TestCase):
         self.assertGreater(config_updates, 0)
         self.assertEqual(metadata_updates, config_updates)
 
+    def test_shard_override_updates_submission_metadata(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "run-scenario.yml").read_text()
+
+        config_updates = workflow.count(".components.gateway.config.assessment_config.num_shards = $num_shards")
+        metadata_updates = workflow.count(".metadata.num_shards = $num_shards")
+
+        self.assertGreater(config_updates, 0)
+        self.assertEqual(metadata_updates, config_updates)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -247,6 +247,7 @@ jobs:
             '
              .components.gateway.config.assessment_config.shard_index = $shard_index |
              .components.gateway.config.assessment_config.num_shards = $num_shards |
+             .metadata.num_shards = $num_shards |
              if $task_set_manifest then
                .metadata.task_set = $task_set_manifest.task_set |
                .components.gateway.config.assessment_config.task_set = $task_set_manifest.task_set |
@@ -741,6 +742,7 @@ jobs:
             --arg private_proof_retention "${PRIVATE_PROOF_RETENTION}" \
             '
              .components.gateway.config.assessment_config.num_shards = $num_shards |
+             .metadata.num_shards = $num_shards |
              if $task_set_manifest then
                .metadata.task_set = $task_set_manifest.task_set |
                .components.gateway.config.assessment_config.task_set = $task_set_manifest.task_set |
