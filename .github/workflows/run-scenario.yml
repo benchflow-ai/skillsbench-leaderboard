@@ -441,7 +441,7 @@ jobs:
           wait_for_export_listener "participant_proxy" "http://${docker_bridge_host}:${AMBER_PARTICIPANT_PROXY_PORT}/agent/.well-known/agent-card.json"
 
           echo "Starting gateway service ${gateway_service} after export listeners are ready..."
-          "${compose[@]}" up -d "${gateway_service}"
+          "${compose[@]}" up -d --no-deps "${gateway_service}"
           "${compose[@]}" logs -f --no-color &
           logs_pid=$!
 
