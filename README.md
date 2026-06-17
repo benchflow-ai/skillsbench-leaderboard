@@ -262,19 +262,26 @@ gh workflow run run-scenario.yml \
   -f require_durable_private_proof=false
 ```
 
-Previous current-branch non-durable smoke evidence, before the refreshed
-`ffc7b000b40aa8a9bed9091c95d700c0f83c1e63` source artifacts:
+Latest current-branch smoke evidence on the refreshed v1.1 artifacts:
 
-- workflow run:
-  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27650630569`
 - workflow commit:
-  `fd7ff400fd0289f8fd7b90047c7b2dcbd4358de6`
-- submission branch:
-  `submission-benchflow-ai-20260616-215921`
+  `171b1e1bc4e6b9084c1a00f36a2a85657d2b1159`
+- non-durable workflow run:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27658062720`
+- non-durable submission branch:
+  `submission-benchflow-ai-20260617-005232`
+- durable Supabase S3 workflow run:
+  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27658063549`
+- durable submission branch:
+  `submission-benchflow-ai-20260617-005111`
+- durable private proof:
+  `submissions/benchflow-ai-20260617-005111-private-proof-manifest-refs.json`
+  records a `90d` retained `s3://agentbeats-private-proof/...` proof manifest
+  ref, and the referenced Supabase Storage object was verified with the S3 API.
 - result status:
-  one `citation-check` row for `task_set: "smoke"` with the expected
-  `verifier_error` non-score outcome and digest-pinned green/purple image
-  provenance.
+  both runs produced one flattened `citation-check` row for
+  `task_set: "smoke"` with the expected `verifier_error` non-score outcome and
+  digest-pinned worker/purple image provenance.
 
 For public-readiness runs, set `require_durable_private_proof=true` and provide
 a durable `private_proof_uri_prefix` using `s3://`, `gs://`, or `r2://`. The
