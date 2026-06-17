@@ -248,6 +248,7 @@ jobs:
              .components.gateway.config.assessment_config.shard_index = $shard_index |
              .components.gateway.config.assessment_config.num_shards = $num_shards |
              if $task_set_manifest then
+               .metadata.task_set = $task_set_manifest.task_set |
                .components.gateway.config.assessment_config.task_set = $task_set_manifest.task_set |
                if $task_set_manifest.task_set == "standard-v1" then
                  .components.gateway.config.assessment_config.tasks = "all" |
@@ -741,6 +742,7 @@ jobs:
             '
              .components.gateway.config.assessment_config.num_shards = $num_shards |
              if $task_set_manifest then
+               .metadata.task_set = $task_set_manifest.task_set |
                .components.gateway.config.assessment_config.task_set = $task_set_manifest.task_set |
                if $task_set_manifest.task_set == "standard-v1" then
                  .components.gateway.config.assessment_config.tasks = "all" |
