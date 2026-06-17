@@ -336,6 +336,10 @@ jobs:
               kill "${logs_pid}" >/dev/null 2>&1 || true
               wait "${logs_pid}" >/dev/null 2>&1 || true
             fi
+            if [[ -f amber-proxy.log ]]; then
+              mkdir -p "${AMBER_COMPOSE_DIR}/output"
+              cp amber-proxy.log "${AMBER_COMPOSE_DIR}/output/amber-proxy.log" || true
+            fi
             if [[ ${exit_code} -ne 0 ]]; then
               echo "Amber proxy log:" >&2
               [[ -f amber-proxy.log ]] && cat amber-proxy.log >&2 || true
@@ -629,7 +633,7 @@ jobs:
             ${{ env.AMBER_COMPOSE_DIR }}/output/results.json
             ${{ env.AMBER_COMPOSE_DIR }}/output/provenance.json
             ${{ env.AMBER_COMPOSE_DIR }}/output/private-proof-manifest-refs.json
-            amber-proxy.log
+            ${{ env.AMBER_COMPOSE_DIR }}/output/amber-proxy.log
 
   summary:
     needs: [setup, eval]
