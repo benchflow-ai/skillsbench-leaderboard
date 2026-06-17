@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +33,12 @@ class ProofError(Exception):
     pass
 
 
-def verify_private_proofs(*, manifest_path: Path, proof_root: Path) -> dict[str, Any]:
+def verify_private_proofs(
+    *,
+    manifest_path: Path,
+    proof_root: Path,
+    require_a2a_evidence_tasks: Sequence[str] = (),
+) -> dict[str, Any]:
     manifest = _load_json(manifest_path)
     if not isinstance(manifest, dict):
         raise ProofError("private proof ref manifest must be a JSON object")
@@ -58,12 +64,25 @@ def verify_private_proofs(*, manifest_path: Path, proof_root: Path) -> dict[str,
         matches = [path for path in proof_files if path.parent.name == proof_id]
         if len(matches) != 1:
             raise ProofError(f"expected one downloaded proof.json for proof_id {proof_id}, found {len(matches)}")
-        summaries.append(_verify_proof(matches[0], proof_id=proof_id, retention=retention))
+        summaries.append(
+            _verify_proof(
+                matches[0],
+                proof_id=proof_id,
+                retention=retention,
+                require_a2a_evidence_tasks=set(require_a2a_evidence_tasks),
+            )
+        )
 
     return {"proof_count": len(summaries), "proofs": summaries}
 
 
-def _verify_proof(path: Path, *, proof_id: str, retention: str) -> dict[str, Any]:
+def _verify_proof(
+    path: Path,
+    *,
+    proof_id: str,
+    retention: str,
+    require_a2a_evidence_tasks: set[str],
+) -> dict[str, Any]:
     proof = _load_json(path)
     if not isinstance(proof, dict):
         raise ProofError(f"{path}: proof must be a JSON object")
@@ -98,6 +117,8 @@ def _verify_proof(path: Path, *, proof_id: str, retention: str) -> dict[str, Any
         missing = [rel for rel in REQUIRED_TASK_ARTIFACTS if rel not in rels]
         if missing:
             raise ProofError(f"{path}: task {task_id} is missing required private artifact(s): {', '.join(missing)}")
+        if task_id in require_a2a_evidence_tasks:
+            _verify_a2a_evidence(path.parent / "artifacts" / task_id / "trajectory" / "a2a_trajectory.jsonl", task_id=task_id)
 
     return {
         "proof_id": proof_id,
@@ -106,6 +127,7 @@ def _verify_proof(path: Path, *, proof_id: str, retention: str) -> dict[str, Any
         "public_row_count": len(rows),
         "task_count": len(task_ids),
         "copied_artifact_count": len(artifacts),
+        "a2a_evidence_task_count": len(task_ids & require_a2a_evidence_tasks),
         "task_ids_sha256": _sha256_text("\n".join(sorted(task_ids))),
     }
 
@@ -171,6 +193,72 @@ def _require_parseable_jsonl(path: Path) -> None:
             raise ProofError(f"{path}: invalid JSONL at line {line_no}: {exc}") from exc
 
 
+def _load_jsonl(path: Path) -> list[Any]:
+    lines = [line for line in path.read_text(errors="replace").splitlines() if line.strip()]
+    if not lines:
+        raise ProofError(f"{path}: JSONL artifact must not be empty")
+    events: list[Any] = []
+    for line_no, line in enumerate(lines, start=1):
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError as exc:
+            raise ProofError(f"{path}: invalid JSONL at line {line_no}: {exc}") from exc
+    return events
+
+
+def _verify_a2a_evidence(path: Path, *, task_id: str) -> None:
+    events = _load_jsonl(path)
+    if any(isinstance(event, dict) and event.get("type") == "a2a_error" for event in events):
+        raise ProofError(f"{path}: task {task_id} contains an a2a_error event")
+
+    context_events = [
+        event
+        for event in events
+        if isinstance(event, dict)
+        and event.get("type") == "sandbox_context"
+        and isinstance(event.get("files"), list)
+        and event["files"]
+    ]
+    if not context_events:
+        raise ProofError(f"{path}: task {task_id} has no sandbox_context evidence")
+
+    request_events = [
+        event
+        for event in events
+        if isinstance(event, dict)
+        and event.get("type") == "a2a_request"
+        and isinstance(event.get("text"), str)
+        and "<sandbox_file " in event["text"]
+    ]
+    if not request_events:
+        raise ProofError(f"{path}: task {task_id} has no A2A request with attached sandbox file context")
+
+    receipts = [
+        event.get("agent_under_test_receipt")
+        for event in events
+        if isinstance(event, dict) and event.get("type") == "a2a_response"
+    ]
+    receipts = [receipt for receipt in receipts if isinstance(receipt, dict)]
+    if not receipts:
+        raise ProofError(f"{path}: task {task_id} has no agent-under-test A2A response receipt")
+
+    active_receipts = [
+        receipt
+        for receipt in receipts
+        if receipt.get("agent_under_test") is True
+        and _positive_number(receipt.get("event_count"))
+        and _positive_number(receipt.get("returned_file_count"))
+    ]
+    if not active_receipts:
+        raise ProofError(
+            f"{path}: task {task_id} has no receipt with event_count > 0 and returned_file_count > 0"
+        )
+
+
+def _positive_number(value: Any) -> bool:
+    return isinstance(value, int | float) and not isinstance(value, bool) and value > 0
+
+
 def _load_json(path: Path) -> Any:
     try:
         return json.loads(path.read_text())
@@ -202,10 +290,20 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--proof-root", type=Path, required=True)
+    parser.add_argument(
+        "--require-a2a-evidence-task",
+        action="append",
+        default=[],
+        help="Task id that must have sandbox context and nonzero agent-under-test A2A activity.",
+    )
     args = parser.parse_args()
 
     try:
-        summary = verify_private_proofs(manifest_path=args.manifest, proof_root=args.proof_root)
+        summary = verify_private_proofs(
+            manifest_path=args.manifest,
+            proof_root=args.proof_root,
+            require_a2a_evidence_tasks=args.require_a2a_evidence_task,
+        )
     except ProofError as exc:
         print(f"Private proof verification failed: {exc}", file=sys.stderr)
         return 1

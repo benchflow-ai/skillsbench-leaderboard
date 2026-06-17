@@ -26,6 +26,74 @@ class VerifyPrivateProofTests(unittest.TestCase):
         self.assertEqual(summary["proofs"][0]["public_row_count"], 1)
         self.assertEqual(summary["proofs"][0]["copied_artifact_count"], 5)
 
+    def test_accepts_required_a2a_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=self._active_a2a_trajectory())
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["citation-check"],
+            )
+
+        self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
+
+    def test_rejects_zero_event_a2a_evidence(self) -> None:
+        trajectory = self._active_a2a_trajectory(event_count=0)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "event_count > 0"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
+    def test_rejects_missing_returned_file_a2a_evidence(self) -> None:
+        trajectory = self._active_a2a_trajectory(returned_file_count=0)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "returned_file_count > 0"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
+    def test_rejects_missing_sandbox_context_a2a_evidence(self) -> None:
+        trajectory = [
+            event for event in self._active_a2a_trajectory() if event["type"] != "sandbox_context"
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "sandbox_context"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
+    def test_rejects_a2a_error_evidence(self) -> None:
+        trajectory = self._active_a2a_trajectory()
+        trajectory.insert(2, {"type": "a2a_error", "message": "participant failed"})
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "a2a_error"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
     def test_rejects_missing_required_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -44,7 +112,7 @@ class VerifyPrivateProofTests(unittest.TestCase):
             with self.assertRaises(verify_module.ProofError):
                 verify_module.verify_private_proofs(manifest_path=manifest, proof_root=root / "downloaded")
 
-    def _write_bundle(self, root: Path) -> Path:
+    def _write_bundle(self, root: Path, *, a2a_trajectory: list[dict[str, object]] | None = None) -> Path:
         proof_id = "proof-123"
         storage = "s3://agentbeats-private-proof/run"
         manifest_path = root / "refs.json"
@@ -65,7 +133,12 @@ class VerifyPrivateProofTests(unittest.TestCase):
         (task_dir / "agent" / "agentbeats_a2a.txt").write_text("[agentbeats-a2a] A2A prompt completed\n")
         (task_dir / "result.json").write_text('{"reward":0.0}\n')
         (task_dir / "trajectory" / "acp_trajectory.jsonl").write_text('{"type":"user_message"}\n')
-        (task_dir / "trajectory" / "a2a_trajectory.jsonl").write_text('{"event":"done"}\n')
+        if a2a_trajectory is None:
+            (task_dir / "trajectory" / "a2a_trajectory.jsonl").write_text('{"event":"done"}\n')
+        else:
+            (task_dir / "trajectory" / "a2a_trajectory.jsonl").write_text(
+                "".join(json.dumps(event) + "\n" for event in a2a_trajectory)
+            )
         (task_dir / "verifier" / "reward.txt").write_text("0.0\n")
         proof_dir.mkdir(parents=True, exist_ok=True)
         (proof_dir / "proof.json").write_text(json.dumps(self._proof(proof_id)))
@@ -105,6 +178,35 @@ class VerifyPrivateProofTests(unittest.TestCase):
             "copied_artifacts": artifacts,
             "retention": "90d",
         }
+
+    @staticmethod
+    def _active_a2a_trajectory(*, event_count: int = 3, returned_file_count: int = 1) -> list[dict[str, object]]:
+        return [
+            {"type": "user_message", "text": "inspect /root/test.bib"},
+            {
+                "type": "sandbox_context",
+                "agent_cwd": "/root",
+                "files": [{"path": "/root/test.bib", "bytes": 34, "sha256": "abc123"}],
+            },
+            {
+                "type": "a2a_request",
+                "text": 'inspect /root/test.bib\n<sandbox_file path="/root/test.bib">...</sandbox_file>',
+            },
+            {
+                "type": "a2a_response",
+                "agent_under_test_receipt": {
+                    "agent_under_test": True,
+                    "participant_run_id": "purple-1",
+                    "harness": "openhands",
+                    "model": "deepseek/deepseek-v4-flash",
+                    "provider": "deepseek",
+                    "api_key_present": True,
+                    "exit_code": 0,
+                    "event_count": event_count,
+                    "returned_file_count": returned_file_count,
+                },
+            },
+        ]
 
 
 if __name__ == "__main__":

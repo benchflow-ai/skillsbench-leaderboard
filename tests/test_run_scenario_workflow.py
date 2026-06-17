@@ -35,7 +35,14 @@ class RunScenarioWorkflowTests(unittest.TestCase):
 
         self.assertLess(publish_index, verify_index)
         self.assertLess(verify_index, upload_index)
-        self.assertIn("python scripts/verify_private_proof.py --manifest", workflow)
+        self.assertIn('verify_args=(--manifest "${refs_file}" --proof-root "${download_root}")', workflow)
+        self.assertIn('python scripts/verify_private_proof.py "${verify_args[@]}"', workflow)
+
+    def test_smoke_private_proof_requires_real_a2a_evidence(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "run-scenario.yml").read_text()
+
+        self.assertIn('if [[ "${TASK_SET_INPUT}" == "smoke" ]]', workflow)
+        self.assertIn("--require-a2a-evidence-task citation-check", workflow)
 
     def test_shard_private_proof_manifest_includes_storage_metadata(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "run-scenario.yml").read_text()

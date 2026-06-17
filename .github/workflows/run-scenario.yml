@@ -650,6 +650,7 @@ jobs:
           AWS_REGION: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_AWS_REGION || secrets.AWS_REGION || 'us-east-1' }}
           AWS_ENDPOINT_URL_S3: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_S3_ENDPOINT_URL || secrets.AWS_ENDPOINT_URL_S3 || '' }}
           R2_ENDPOINT_URL: ${{ secrets.SKILLSBENCH_PRIVATE_PROOF_R2_ENDPOINT_URL || secrets.R2_ENDPOINT_URL || '' }}
+          TASK_SET_INPUT: ${{ inputs.task_set || '' }}
         run: |
           set -euo pipefail
           refs_file="${AMBER_COMPOSE_DIR}/output/private-proof-manifest-refs.json"
@@ -713,7 +714,11 @@ jobs:
             echo "durable private proof is required but no private proof refs were produced" >&2
             exit 1
           fi
-          python scripts/verify_private_proof.py --manifest "${refs_file}" --proof-root "${download_root}"
+          verify_args=(--manifest "${refs_file}" --proof-root "${download_root}")
+          if [[ "${TASK_SET_INPUT}" == "smoke" ]]; then
+            verify_args+=(--require-a2a-evidence-task citation-check)
+          fi
+          python scripts/verify_private_proof.py "${verify_args[@]}"
 
       - name: Stop scenario
         if: always()
