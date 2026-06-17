@@ -1,0 +1,7 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-smoke-a19c71c0",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-smoke-a19c71c0/9ea0954410be41a6809ea3a74e53fa56/proof.json"
+  ]
+}
