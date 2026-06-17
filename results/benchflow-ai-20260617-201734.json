@@ -1,0 +1,46 @@
+{
+  "status": "completed",
+  "participants": {
+    "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+  },
+  "results": [
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "citation-check",
+          "trial_id": "citation-check__agentbeats__95f44a79",
+          "task_set": "smoke",
+          "task_set_digest": "sha256:7118932b0d945649e7be1364754e355c533d0f0d0f6ffa56d38330bc3981a866",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 70.798,
+          "task_digest": "sha256:d78c412f8d9f42b282c12fa009f76b0cda6d9da782ade315946dda747b71f252",
+          "category": "office-white-collar",
+          "difficulty": "medium",
+          "tags": [
+            "citation",
+            "bibtex",
+            "academic",
+            "verification",
+            "api",
+            "crossref",
+            "semantic-scholar"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    }
+  ]
+}
