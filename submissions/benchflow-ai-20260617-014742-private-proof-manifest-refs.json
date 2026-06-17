@@ -1,0 +1,7 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/real-model-smoke-a54e9f8-20260617-020000",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats/skillsbench-v1.1/real-model-smoke-a54e9f8-20260617-020000/083a9c0d068c4909896b49b3c84c776f/proof.json"
+  ]
+}
