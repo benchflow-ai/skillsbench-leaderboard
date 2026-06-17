@@ -37,6 +37,12 @@ class RunScenarioWorkflowTests(unittest.TestCase):
         self.assertLess(verify_index, upload_index)
         self.assertIn("python scripts/verify_private_proof.py --manifest", workflow)
 
+    def test_shard_private_proof_manifest_includes_storage_metadata(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "run-scenario.yml").read_text()
+
+        self.assertIn('"private_proof_storage": prefix', workflow)
+        self.assertIn('"private_proof_retention": os.environ["PRIVATE_PROOF_RETENTION"]', workflow)
+
 
 if __name__ == "__main__":
     unittest.main()

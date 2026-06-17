@@ -496,6 +496,7 @@ jobs:
         env:
           REQUIRE_DURABLE_PRIVATE_PROOF: ${{ inputs.require_durable_private_proof && 'true' || 'false' }}
           PRIVATE_PROOF_URI_PREFIX: ${{ inputs.private_proof_uri_prefix || '' }}
+          PRIVATE_PROOF_RETENTION: ${{ inputs.private_proof_retention || '' }}
           PRIVATE_PROOF_ROOT: ${{ runner.temp }}/skillsbench-private-proof
         run: |
           set -euo pipefail
@@ -546,7 +547,16 @@ jobs:
           if not refs:
               raise SystemExit("durable private proof is required but no proof.json manifests were collected")
           Path(os.environ["AMBER_COMPOSE_DIR"], "output", "private-proof-manifest-refs.json").write_text(
-              json.dumps({"private_proof_manifest_refs": refs}, indent=2, sort_keys=True) + "\n"
+              json.dumps(
+                  {
+                      "private_proof_storage": prefix,
+                      "private_proof_retention": os.environ["PRIVATE_PROOF_RETENTION"],
+                      "private_proof_manifest_refs": refs,
+                  },
+                  indent=2,
+                  sort_keys=True,
+              )
+              + "\n"
           )
           PY
           fi
