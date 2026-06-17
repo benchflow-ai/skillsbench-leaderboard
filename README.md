@@ -250,39 +250,38 @@ gh workflow run run-scenario.yml \
 Do not pass `task_set` for the deployment smoke. The checked-in scenario already
 defaults to `deploy-smoke-v1`.
 
-Run the current v1.1 one-task public-readiness smoke from this branch:
+Run the current v1.1 one-task public-readiness smoke from this branch only
+after configuring a valid DeepSeek-specific repository secret:
+
+```bash
+gh secret set AGENT_UNDER_TEST__DEEPSEEK_API_KEY \
+  --repo benchflow-ai/skillsbench-leaderboard
+```
 
 ```bash
 gh workflow run run-scenario.yml \
   --repo benchflow-ai/skillsbench-leaderboard \
-  --ref agentbeats/sync-skillsbench-v1.1 \
+  --ref agentbeats/sandbox-a2a-override \
   -f task_set=smoke \
   -f num_shards=1 \
-  -f green_agent_id=019e4ecb-4b5b-7481-b6f4-85ad93336437 \
-  -f purple_agent_id=019e4ed1-d333-7133-807f-5f22c04d5eef \
-  -f require_durable_private_proof=false
+  -f num_instances=1 \
+  -f scenario_path=scenario-standard-v1.json5 \
+  -f green_agent_id=019e5799-3aca-7d20-ba8c-2b0bc785ac62 \
+  -f purple_agent_id=019e5799-ca68-7b33-b1a5-c97b92b6fda1 \
+  -f agent_harness=openhands \
+  -f agent_model=deepseek/deepseek-v4-flash \
+  -f agent_timeout_sec=900 \
+  -f require_durable_private_proof=true \
+  -f private_proof_uri_prefix="s3://agentbeats-private-proof/agentbeats-deepseek4flash-citation-check-v1.1-realtraj-$(date -u +%Y%m%d-%H%M%S)" \
+  -f private_proof_retention=90d
 ```
 
-Latest current-branch smoke evidence on the refreshed v1.1 artifacts:
-
-- workflow commit:
-  `171b1e1bc4e6b9084c1a00f36a2a85657d2b1159`
-- non-durable workflow run:
-  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27658062720`
-- non-durable submission branch:
-  `submission-benchflow-ai-20260617-005232`
-- durable Supabase S3 workflow run:
-  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27658063549`
-- durable submission branch:
-  `submission-benchflow-ai-20260617-005111`
-- durable private proof:
-  `submissions/benchflow-ai-20260617-005111-private-proof-manifest-refs.json`
-  records a `90d` retained `s3://agentbeats-private-proof/...` proof manifest
-  ref, and the referenced Supabase Storage object was verified with the S3 API.
-- result status:
-  both runs produced one flattened `citation-check` row for
-  `task_set: "smoke"` with the expected `verifier_error` non-score outcome and
-  digest-pinned worker/purple image provenance.
+The `smoke` task set is citation-check only. For this DeepSeek evidence path,
+the workflow requires durable private proof and verifies that the downloaded
+proof contains real A2A activity: sandbox context, an A2A request with attached
+sandbox-file context, an A2A response receipt, `event_count > 0`, and
+`returned_file_count > 0`. A run that only produces bridge diagnostics or a
+zero-event participant receipt is not accepted as public-readiness evidence.
 
 For public-readiness runs, set `require_durable_private_proof=true` and provide
 a durable `private_proof_uri_prefix` using `s3://`, `gs://`, or `r2://`. The
