@@ -70,7 +70,7 @@
     { to: "#skillsbench_green.proxy", from: "#gateway.proxy", weak: true },
   ],
 
-  exports: { results: "#gateway.results" },
+  exports: { results: "#gateway.results", participant_proxy: "#gateway.proxy" },
 
   metadata: {
     agentbeats_ids: {

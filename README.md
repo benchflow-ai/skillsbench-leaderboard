@@ -24,9 +24,9 @@ The current AgentBeats promotion target is `skillsbench-v1.1`:
   `benchflow-ai/skillsbench@ffc7b000b40aa8a9bed9091c95d700c0f83c1e63`.
 - `prebuilt_images/skillsbench-v1.1.json`: digest-pinned public `linux/amd64`
   task environment images for all 87 task ids.
-- `deploy_bundles/skillsbench-v1.1.json`: source revision, runtime image
-  digests, task-set digest, and 87 prebuilt task image refs in one reviewable
-  bundle.
+- `deploy_bundles/skillsbench-v1.1.json`: runtime source revision
+  `57bb588d13b83d9863d481e9261af1b416f49b38`, runtime image digests, task-set
+  digest, and 87 prebuilt task image refs in one reviewable bundle.
 
 `green-agent.json5` is the registered AgentBeats green manifest. It embeds the
 worker process, defaults to `skillsbench-v1.1`, shards the 87-task set across
@@ -66,8 +66,9 @@ task set, such as `smoke`, for maintainer evidence runs.
   map.
 - `prebuilt_images/skillsbench-v1.1.json`: full digest-pinned task-image map
   for `skillsbench-v1.1`.
-- `deploy_bundles/skillsbench-v1.1.json`: deploy-ready bundle tying the source
-  revision, runtime image digests, task-set digest, and 87 prebuilt task images.
+- `deploy_bundles/skillsbench-v1.1.json`: deploy-ready bundle tying the runtime
+  source revision, runtime image digests, task-set digest, and 87 prebuilt task
+  images.
 - `queries/*.sql`: DuckDB leaderboard queries. The first column is the
   AgentBeats purple-agent UUID.
 - `results/`: merged public result JSON files read by AgentBeats.
@@ -78,15 +79,15 @@ task set, such as `smoke`, for maintainer evidence runs.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:bd4ef74ecc775e50eb70c0eff37579b3c259a928c71063b0ad4fdf06bd851f69`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:73524314028d41e76b000eb45b7cb80548013003453c09aeec9761898b24f240`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:bd4ef74ecc775e50eb70c0eff37579b3c259a928c71063b0ad4fdf06bd851f69`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:73524314028d41e76b000eb45b7cb80548013003453c09aeec9761898b24f240`
 - standalone green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:837317d4124be068a3bb894925b18cbd0388d81bc5d42ae3070915a44f9ba172`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:013b56e4f1e5a0d7e6bf886d74ac05345a1a2e91ad687cfe71bc8f06c4857629`
 - purple baseline:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:22e671dc7ffd3ea75c7b829d16e6ff718ae18e3c13647c846205f3f7bb46a165`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:f45e8f287cf96197a3840f2f915475ceeac8d6969ac7d580fe264097e6cef556`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:22e671dc7ffd3ea75c7b829d16e6ff718ae18e3c13647c846205f3f7bb46a165`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:f45e8f287cf96197a3840f2f915475ceeac8d6969ac7d580fe264097e6cef556`
 - task environments:
   `prebuilt_images/skillsbench-v1.1.json`
 - deploy bundle:
@@ -249,39 +250,38 @@ gh workflow run run-scenario.yml \
 Do not pass `task_set` for the deployment smoke. The checked-in scenario already
 defaults to `deploy-smoke-v1`.
 
-Run the current v1.1 one-task public-readiness smoke from this branch:
+Run the current v1.1 one-task public-readiness smoke from this branch only
+after configuring a valid DeepSeek-specific repository secret:
+
+```bash
+gh secret set AGENT_UNDER_TEST__DEEPSEEK_API_KEY \
+  --repo benchflow-ai/skillsbench-leaderboard
+```
 
 ```bash
 gh workflow run run-scenario.yml \
   --repo benchflow-ai/skillsbench-leaderboard \
-  --ref agentbeats/sync-skillsbench-v1.1 \
+  --ref agentbeats/sandbox-a2a-override \
   -f task_set=smoke \
   -f num_shards=1 \
-  -f green_agent_id=019e4ecb-4b5b-7481-b6f4-85ad93336437 \
-  -f purple_agent_id=019e4ed1-d333-7133-807f-5f22c04d5eef \
-  -f require_durable_private_proof=false
+  -f num_instances=1 \
+  -f scenario_path=scenario-standard-v1.json5 \
+  -f green_agent_id=019e5799-3aca-7d20-ba8c-2b0bc785ac62 \
+  -f purple_agent_id=019e5799-ca68-7b33-b1a5-c97b92b6fda1 \
+  -f agent_harness=openhands \
+  -f agent_model=deepseek/deepseek-v4-flash \
+  -f agent_timeout_sec=900 \
+  -f require_durable_private_proof=true \
+  -f private_proof_uri_prefix="s3://agentbeats-private-proof/agentbeats-deepseek4flash-citation-check-v1.1-realtraj-$(date -u +%Y%m%d-%H%M%S)" \
+  -f private_proof_retention=90d
 ```
 
-Latest current-branch smoke evidence on the refreshed v1.1 artifacts:
-
-- workflow commit:
-  `171b1e1bc4e6b9084c1a00f36a2a85657d2b1159`
-- non-durable workflow run:
-  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27658062720`
-- non-durable submission branch:
-  `submission-benchflow-ai-20260617-005232`
-- durable Supabase S3 workflow run:
-  `https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27658063549`
-- durable submission branch:
-  `submission-benchflow-ai-20260617-005111`
-- durable private proof:
-  `submissions/benchflow-ai-20260617-005111-private-proof-manifest-refs.json`
-  records a `90d` retained `s3://agentbeats-private-proof/...` proof manifest
-  ref, and the referenced Supabase Storage object was verified with the S3 API.
-- result status:
-  both runs produced one flattened `citation-check` row for
-  `task_set: "smoke"` with the expected `verifier_error` non-score outcome and
-  digest-pinned worker/purple image provenance.
+The `smoke` task set is citation-check only. For this DeepSeek evidence path,
+the workflow requires durable private proof and verifies that the downloaded
+proof contains real A2A activity: sandbox context, an A2A request with attached
+sandbox-file context, an A2A response receipt, `event_count > 0`, and
+`returned_file_count > 0`. A run that only produces bridge diagnostics or a
+zero-event participant receipt is not accepted as public-readiness evidence.
 
 For public-readiness runs, set `require_durable_private_proof=true` and provide
 a durable `private_proof_uri_prefix` using `s3://`, `gs://`, or `r2://`. The

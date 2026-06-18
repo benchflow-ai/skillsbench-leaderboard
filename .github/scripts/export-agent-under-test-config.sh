@@ -54,24 +54,39 @@ provider_key_names() {
   esac
 }
 
+provider_requires_specific_key() {
+  case "$1" in
+    deepseek) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 agent_harness="${AGENT_HARNESS:-openhands}"
 agent_model="${AGENT_MODEL:-gemini/gemini-3.5-flash}"
 agent_timeout_sec="${AGENT_TIMEOUT_SEC:-900}"
-selected_key="${AGENT_UNDER_TEST_API_KEY:-}"
+selected_key=""
+selected_key_source=""
 
+provider="$(provider_from_model "${agent_model}")"
+for name in $(provider_key_names "${provider}"); do
+  candidate="${!name:-}"
+  if [[ -n "${candidate}" ]]; then
+    selected_key="${candidate}"
+    selected_key_source="${name}"
+    break
+  fi
+done
+if [[ -z "${selected_key}" ]] && provider_requires_specific_key "${provider}"; then
+  echo "Missing provider-specific API secret for model '${agent_model}'. Set AGENT_UNDER_TEST__DEEPSEEK_API_KEY or DEEPSEEK_API_KEY; the generic AGENT_UNDER_TEST__API_KEY is not accepted for DeepSeek runs." >&2
+  exit 1
+fi
 if [[ -z "${selected_key}" ]]; then
-  provider="$(provider_from_model "${agent_model}")"
-  for name in $(provider_key_names "${provider}"); do
-    candidate="${!name:-}"
-    if [[ -n "${candidate}" ]]; then
-      selected_key="${candidate}"
-      break
-    fi
-  done
+  selected_key="${AGENT_UNDER_TEST_API_KEY:-}"
+  selected_key_source="AGENT_UNDER_TEST_API_KEY"
 fi
 
 if ! export_secret API_KEY "${selected_key}"; then
-  echo "Missing agent-under-test API secret for model '${agent_model}'. Set AGENT_UNDER_TEST__API_KEY or the matching provider secret." >&2
+  echo "Missing agent-under-test API secret for model '${agent_model}'. Set the matching provider secret or AGENT_UNDER_TEST__API_KEY." >&2
   exit 1
 fi
 
@@ -80,3 +95,4 @@ fi
   echo "AMBER_CONFIG_AGENT_UNDER_TEST__MODEL=${agent_model}"
   echo "AMBER_CONFIG_AGENT_UNDER_TEST__TIMEOUT_SEC=${agent_timeout_sec}"
 } >> "${GITHUB_ENV}"
+echo "Selected agent-under-test API key source: ${selected_key_source}" >&2

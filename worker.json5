@@ -15,6 +15,7 @@
       private_proof_uri_prefix: { type: "string" },
       private_proof_retention: { type: "string" },
       require_durable_private_proof: { type: "boolean" },
+      sandbox_participant_proxy_url: { type: "string" },
       jobs_dir: { type: "string" },
       environment: { type: "string" },
     },
@@ -24,6 +25,7 @@
       "benchflow_revision",
       "worker_image",
       "worker_image_digest",
+      "prebuilt_images",
       "private_proof_dir",
       "private_proof_uri_prefix",
       "private_proof_retention",
@@ -39,7 +41,7 @@
   },
 
   program: {
-    image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:bd4ef74ecc775e50eb70c0eff37579b3c259a928c71063b0ad4fdf06bd851f69",
+    image: "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:73524314028d41e76b000eb45b7cb80548013003453c09aeec9761898b24f240",
     entrypoint: [
       "uv",
       "run",
@@ -66,7 +68,8 @@
         when: "config.prebuilt_images",
         value: "${config.prebuilt_images}",
       },
-      SKILLSBENCH_WORKER_VERIFY_PREBUILT_IMAGES: "true",
+      SKILLSBENCH_WORKER_VERIFY_PREBUILT_IMAGES: "false",
+      SKILLSBENCH_WORKER_REQUIRE_PREBUILT_IMAGES: "true",
       SKILLSBENCH_PRIVATE_PROOF_DIR: "${config.private_proof_dir}",
       SKILLSBENCH_PRIVATE_PROOF_URI_PREFIX: "${config.private_proof_uri_prefix}",
       SKILLSBENCH_PRIVATE_PROOF_RETENTION: "${config.private_proof_retention}",
@@ -77,6 +80,10 @@
       SKILLSBENCH_WORKER_PARTICIPANT_PROXY_URL: {
         when: "slots.proxy",
         value: "${slots.proxy.url}",
+      },
+      SKILLSBENCH_WORKER_SANDBOX_PARTICIPANT_PROXY_URL: {
+        when: "config.sandbox_participant_proxy_url",
+        value: "${config.sandbox_participant_proxy_url}",
       },
     },
     mounts: [
