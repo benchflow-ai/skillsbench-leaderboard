@@ -241,28 +241,6 @@ def _verify_a2a_evidence(path: Path, *, task_id: str) -> None:
     if any(isinstance(event, dict) and event.get("type") == "a2a_error" for event in events):
         raise ProofError(f"{path}: task {task_id} contains an a2a_error event")
 
-    context_events = [
-        event
-        for event in events
-        if isinstance(event, dict)
-        and event.get("type") == "sandbox_context"
-        and isinstance(event.get("files"), list)
-        and event["files"]
-    ]
-    if not context_events:
-        raise ProofError(f"{path}: task {task_id} has no sandbox_context evidence")
-
-    request_events = [
-        event
-        for event in events
-        if isinstance(event, dict)
-        and event.get("type") == "a2a_request"
-        and isinstance(event.get("text"), str)
-        and "<sandbox_file " in event["text"]
-    ]
-    if not request_events:
-        raise ProofError(f"{path}: task {task_id} has no A2A request with attached sandbox file context")
-
     receipts = [
         event.get("agent_under_test_receipt")
         for event in events
@@ -272,17 +250,75 @@ def _verify_a2a_evidence(path: Path, *, task_id: str) -> None:
     if not receipts:
         raise ProofError(f"{path}: task {task_id} has no agent-under-test A2A response receipt")
 
-    active_receipts = [
-        receipt
-        for receipt in receipts
-        if receipt.get("agent_under_test") is True
-        and _positive_number(receipt.get("event_count"))
-        and _positive_number(receipt.get("returned_file_count"))
-    ]
-    if not active_receipts:
-        raise ProofError(
-            f"{path}: task {task_id} has no receipt with event_count > 0 and returned_file_count > 0"
-        )
+    if _has_sandbox_file_a2a_evidence(events):
+        if not any(_active_receipt_with_returned_files(receipt) for receipt in receipts):
+            raise ProofError(
+                f"{path}: task {task_id} has no receipt with event_count > 0 and returned_file_count > 0"
+            )
+        return
+
+    if _has_terminal_protocol_a2a_evidence(events):
+        if not any(_active_receipt(receipt) for receipt in receipts):
+            raise ProofError(f"{path}: task {task_id} has no receipt with event_count > 0")
+        return
+
+    raise ProofError(
+        f"{path}: task {task_id} has neither sandbox_context file evidence nor terminal-bench-shell-v1 exec evidence"
+    )
+
+
+def _has_sandbox_file_a2a_evidence(events: Sequence[Any]) -> bool:
+    return any(
+        isinstance(event, dict)
+        and event.get("type") == "sandbox_context"
+        and isinstance(event.get("files"), list)
+        and event["files"]
+        for event in events
+    ) and any(
+        isinstance(event, dict)
+        and event.get("type") == "a2a_request"
+        and isinstance(event.get("text"), str)
+        and "<sandbox_file " in event["text"]
+        for event in events
+    )
+
+
+def _has_terminal_protocol_a2a_evidence(events: Sequence[Any]) -> bool:
+    return any(_is_terminal_task_request(event) for event in events) and any(
+        isinstance(event, dict)
+        and event.get("type") == "terminal_observation"
+        and isinstance(event.get("action"), dict)
+        and isinstance(event["action"].get("cmd"), str)
+        and event["action"]["cmd"].strip()
+        for event in events
+    )
+
+
+def _is_terminal_task_request(event: Any) -> bool:
+    if not isinstance(event, dict) or event.get("type") != "a2a_request":
+        return False
+    text = event.get("text")
+    if not isinstance(text, str):
+        return False
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return False
+    return (
+        isinstance(payload, dict)
+        and payload.get("kind") == "task"
+        and payload.get("protocol") == "terminal-bench-shell-v1"
+        and isinstance(payload.get("instruction"), str)
+        and bool(payload["instruction"].strip())
+    )
+
+
+def _active_receipt(receipt: dict[str, Any]) -> bool:
+    return receipt.get("agent_under_test") is True and _positive_number(receipt.get("event_count"))
+
+
+def _active_receipt_with_returned_files(receipt: dict[str, Any]) -> bool:
+    return _active_receipt(receipt) and _positive_number(receipt.get("returned_file_count"))
 
 
 def _positive_number(value: Any) -> bool:

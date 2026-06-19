@@ -261,7 +261,7 @@ gh secret set AGENT_UNDER_TEST__DEEPSEEK_API_KEY \
 ```bash
 gh workflow run run-scenario.yml \
   --repo benchflow-ai/skillsbench-leaderboard \
-  --ref agentbeats/sandbox-a2a-override \
+  --ref main \
   -f task_set=smoke \
   -f num_shards=1 \
   -f num_instances=1 \
@@ -278,10 +278,13 @@ gh workflow run run-scenario.yml \
 
 The `smoke` task set is citation-check only. For this DeepSeek evidence path,
 the workflow requires durable private proof and verifies that the downloaded
-proof contains real A2A activity: sandbox context, an A2A request with attached
-sandbox-file context, an A2A response receipt, `event_count > 0`, and
-`returned_file_count > 0`. A run that only produces bridge diagnostics or a
-zero-event participant receipt is not accepted as public-readiness evidence.
+proof contains real A2A activity. Terminal-Bench protocol runs must include a
+terminal-bench-shell-v1 task request, at least one green-executed terminal
+observation, and an A2A response receipt with `event_count > 0`. File-return
+runs must include sandbox-file context, an A2A response receipt with
+`event_count > 0`, and `returned_file_count > 0`. A run that only produces
+bridge diagnostics or a zero-event participant receipt is not accepted as
+public-readiness evidence.
 
 For public-readiness runs, set `require_durable_private_proof=true` and provide
 a durable `private_proof_uri_prefix` using `s3://`, `gs://`, or `r2://`. The

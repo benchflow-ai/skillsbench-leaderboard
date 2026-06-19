@@ -39,6 +39,19 @@ class VerifyPrivateProofTests(unittest.TestCase):
 
         self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
 
+    def test_accepts_terminal_protocol_a2a_evidence_without_returned_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=self._terminal_protocol_a2a_trajectory())
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["citation-check"],
+            )
+
+        self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
+
     def test_rejects_zero_event_a2a_evidence(self) -> None:
         trajectory = self._active_a2a_trajectory(event_count=0)
         with tempfile.TemporaryDirectory() as tmp:
@@ -256,6 +269,44 @@ class VerifyPrivateProofTests(unittest.TestCase):
                     "event_count": event_count,
                     "returned_file_count": returned_file_count,
                 },
+            },
+        ]
+
+    @staticmethod
+    def _terminal_protocol_a2a_trajectory(*, event_count: int = 3) -> list[dict[str, object]]:
+        return [
+            {"type": "user_message", "text": "write /root/answer.json"},
+            {
+                "type": "a2a_request",
+                "turn": 1,
+                "text": json.dumps(
+                    {
+                        "kind": "task",
+                        "protocol": "terminal-bench-shell-v1",
+                        "instruction": "write /root/answer.json",
+                    }
+                ),
+            },
+            {
+                "type": "a2a_response",
+                "turn": 1,
+                "agent_under_test_receipt": {
+                    "agent_under_test": True,
+                    "participant_run_id": "purple-1",
+                    "harness": "openhands",
+                    "model": "deepseek/deepseek-v4-flash",
+                    "provider": "deepseek",
+                    "api_key_present": True,
+                    "exit_code": 0,
+                    "event_count": event_count,
+                    "returned_file_count": 0,
+                },
+            },
+            {
+                "type": "terminal_observation",
+                "turn": 1,
+                "action": {"action": "exec", "cmd": "cat /root/test.bib", "timeout_sec": 30},
+                "observation": {"ok": True, "return_code": 0, "stdout": "@article{fake}\n", "stderr": ""},
             },
         ]
 
