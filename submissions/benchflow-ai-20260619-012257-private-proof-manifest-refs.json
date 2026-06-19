@@ -1,0 +1,7 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-a2a-poll-ids-rerun-20260619-010957",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-a2a-poll-ids-rerun-20260619-010957/e0c9374afb5f4de5a89319d55c398160/proof.json"
+  ]
+}
