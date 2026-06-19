@@ -38,11 +38,12 @@ class RunScenarioWorkflowTests(unittest.TestCase):
         self.assertIn('verify_args=(--manifest "${refs_file}" --proof-root "${download_root}")', workflow)
         self.assertIn('python scripts/verify_private_proof.py "${verify_args[@]}"', workflow)
 
-    def test_smoke_private_proof_requires_real_a2a_evidence(self) -> None:
+    def test_task_set_private_proof_requires_real_a2a_evidence(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "run-scenario.yml").read_text()
 
-        self.assertIn('if [[ "${TASK_SET_INPUT}" == "smoke" ]]', workflow)
-        self.assertIn("--require-a2a-evidence-task citation-check", workflow)
+        self.assertIn('if [[ -n "${TASK_SET_INPUT}" && -f "task_sets/${TASK_SET_INPUT}.json" ]]', workflow)
+        self.assertIn('jq -r \'.tasks[]?.task_id // empty\' "task_sets/${TASK_SET_INPUT}.json"', workflow)
+        self.assertIn('verify_args+=(--require-a2a-evidence-task "${task_id}")', workflow)
 
     def test_shard_private_proof_manifest_includes_storage_metadata(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "run-scenario.yml").read_text()
