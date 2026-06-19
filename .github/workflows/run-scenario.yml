@@ -715,8 +715,19 @@ jobs:
             exit 1
           fi
           verify_args=(--manifest "${refs_file}" --proof-root "${download_root}")
-          if [[ "${TASK_SET_INPUT}" == "smoke" ]]; then
-            verify_args+=(--require-a2a-evidence-task citation-check)
+          if [[ -n "${TASK_SET_INPUT}" && -f "task_sets/${TASK_SET_INPUT}.json" ]]; then
+            while IFS= read -r task_id; do
+              [[ -n "${task_id}" ]] || continue
+              verify_args+=(--require-a2a-evidence-task "${task_id}")
+            done < <(jq -r '.tasks[]?.task_id // empty' "task_sets/${TASK_SET_INPUT}.json")
+          else
+            while IFS= read -r task_id; do
+              [[ -n "${task_id}" ]] || continue
+              verify_args+=(--require-a2a-evidence-task "${task_id}")
+            done < <(
+              npx --yes json5 "${SCENARIO_PATH}" \
+                | jq -r '.components.gateway.config.assessment_config.task_ids[]? // empty'
+            )
           fi
           python scripts/verify_private_proof.py "${verify_args[@]}"
 
