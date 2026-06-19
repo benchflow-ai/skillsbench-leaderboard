@@ -25,7 +25,7 @@ The current AgentBeats promotion target is `skillsbench-v1.1`:
 - `prebuilt_images/skillsbench-v1.1.json`: digest-pinned public `linux/amd64`
   task environment images for all 87 task ids.
 - `deploy_bundles/skillsbench-v1.1.json`: runtime source revision
-  `57bb588d13b83d9863d481e9261af1b416f49b38`, runtime image digests, task-set
+  `f0d54f8507704500de9c7c9fb00c0a4ee736b41a`, runtime image digests, task-set
   digest, and 87 prebuilt task image refs in one reviewable bundle.
 
 `green-agent.json5` is the registered AgentBeats green manifest. It embeds the
@@ -79,15 +79,15 @@ task set, such as `smoke`, for maintainer evidence runs.
 Current public digest-pinned images:
 
 - green with embedded worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:73524314028d41e76b000eb45b7cb80548013003453c09aeec9761898b24f240`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:fb7e913dc1f4990d15426d497447ed05160d3527baa36de74ac80b3ffa2f1c62`
 - standalone worker:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:73524314028d41e76b000eb45b7cb80548013003453c09aeec9761898b24f240`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:fb7e913dc1f4990d15426d497447ed05160d3527baa36de74ac80b3ffa2f1c62`
 - standalone green:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:013b56e4f1e5a0d7e6bf886d74ac05345a1a2e91ad687cfe71bc8f06c4857629`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-green@sha256:bfedd60716c41cde35c37c5e3c019ac7f94ab7c08d7938043dd8dcbe019203d3`
 - purple baseline:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:f45e8f287cf96197a3840f2f915475ceeac8d6969ac7d580fe264097e6cef556`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:956bd55f6672b258555c5d0546b83363dbc062462df540e2c658fc50feb6ef37`
 - purple agent-under-test:
-  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:f45e8f287cf96197a3840f2f915475ceeac8d6969ac7d580fe264097e6cef556`
+  `ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:956bd55f6672b258555c5d0546b83363dbc062462df540e2c658fc50feb6ef37`
 - task environments:
   `prebuilt_images/skillsbench-v1.1.json`
 - deploy bundle:
