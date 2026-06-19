@@ -1,0 +1,127 @@
+{
+  "manifest_version": "0.4.0",
+  "experimental_features": [
+    "docker"
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "agent_under_test": {
+        "type": "object",
+        "properties": {
+          "harness": {
+            "type": "string",
+            "enum": [
+              "openhands",
+              "opencode",
+              "claude-code",
+              "codex",
+              "gemini-cli",
+              "terminus",
+              "pi"
+            ],
+            "default": "openhands"
+          },
+          "api_key": {
+            "type": "string",
+            "secret": true
+          },
+          "model": {
+            "type": "string",
+            "default": "gemini/gemini-3.5-flash"
+          },
+          "timeout_sec": {
+            "type": "integer",
+            "default": 900
+          }
+        },
+        "required": [
+          "api_key"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "agent_under_test"
+    ],
+    "additionalProperties": false
+  },
+  "components": {
+    "gateway": {
+      "manifest": "https://raw.githubusercontent.com/RDI-Foundation/agentbeats-gateway/refs/tags/v0.3/amber-manifest.json5",
+      "config": {
+        "assessment_config": {
+          "task_set": "deploy-smoke-v1",
+          "condition": "with_skills",
+          "allow_excluded_tasks": false,
+          "shard_index": 0,
+          "num_shards": 1,
+          "task_ids": [
+            "citation-check",
+            "court-form-filling",
+            "dialogue-parser",
+            "offer-letter-generator",
+            "powerlifting-coef-calc"
+          ],
+          "num_instances": 1,
+          "participant_ids": {
+            "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+          }
+        },
+        "participant_roles": {
+          "green": "skillsbench_green",
+          "purple1": "agent"
+        }
+      }
+    },
+    "skillsbench_green": {
+      "manifest": "./green-agent.json5",
+      "config": {
+        "prebuilt_images": "{\"citation-check\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:8ba4740e9edfe7bb0d071c6e64f788e5652a47fc24fc0e7c74bdb2f896877233\",\"court-form-filling\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:37bdea4e2b901e0a11724a1a6f79b12921349185e490976d7891d7a1cd08a5e8\",\"dialogue-parser\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:c7885a97b18332bb9a5853ab26851a5f0fbeca7d04ef8c1c757ad610f13478e6\",\"offer-letter-generator\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:92a50feb1057ca03680a1fca2c3631651911cf58f735584a7d18c797056ea5b4\",\"powerlifting-coef-calc\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:c2566e89561d86afdaa524798249dee56a0626a9608c9a6dc4e6c626ee6f7954\"}",
+        "require_durable_private_proof": true,
+        "private_proof_uri_prefix": "s3://agentbeats-private-proof/agentbeats-deepseek4pro-citation-smoke-v1.1-terminal-tool-recovery-a7eff-20260619-202635",
+        "private_proof_retention": "90d"
+      }
+    },
+    "agent_under_test": {
+      "manifest": "./participant-agent-under-test.json5",
+      "config": {
+        "harness": "${config.agent_under_test.harness}",
+        "api_key": "${config.agent_under_test.api_key}",
+        "model": "${config.agent_under_test.model}",
+        "timeout_sec": "${config.agent_under_test.timeout_sec}"
+      }
+    }
+  },
+  "bindings": [
+    {
+      "to": "#gateway.green",
+      "from": "#skillsbench_green.a2a"
+    },
+    {
+      "to": "#gateway.purple1",
+      "from": "#agent_under_test.a2a"
+    },
+    {
+      "to": "#skillsbench_green.proxy",
+      "from": "#gateway.proxy",
+      "weak": true
+    }
+  ],
+  "exports": {
+    "results": "#gateway.results",
+    "participant_proxy": "#gateway.proxy"
+  },
+  "metadata": {
+    "agentbeats_ids": {
+      "skillsbench_green": "019e5799-3aca-7d20-ba8c-2b0bc785ac62",
+      "agent": "",
+      "agent_under_test": "",
+      "baseline_agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+    },
+    "worker_mode": "embedded_green_worker",
+    "task_set": "deploy-smoke-v1",
+    "runtime_first": true,
+    "num_shards": 1
+  }
+}

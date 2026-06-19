@@ -1,0 +1,46 @@
+{
+  "status": "completed",
+  "participants": {
+    "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+  },
+  "results": [
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "citation-check",
+          "trial_id": "citation-check__agentbeats__f78237a9",
+          "task_set": "deploy-smoke-v1",
+          "task_set_digest": "sha256:dfc4e8fcdc157c260173dabc4dc31bd7f36c5abfa1d89cbba50ad79fb83e8b93",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 149.388,
+          "task_digest": "sha256:d78c412f8d9f42b282c12fa009f76b0cda6d9da782ade315946dda747b71f252",
+          "category": "office-white-collar",
+          "difficulty": "medium",
+          "tags": [
+            "citation",
+            "bibtex",
+            "academic",
+            "verification",
+            "api",
+            "crossref",
+            "semantic-scholar"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-deepseek4pro-citation-smoke-v1.1-terminal-tool-recovery-a7eff-20260619-202635",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-citation-smoke-v1.1-terminal-tool-recovery-a7eff-20260619-202635/e2cd1064b86d47af8c32148dcc567a8b/proof.json"
+  ]
+}
