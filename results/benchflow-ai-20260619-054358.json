@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "participants": {
+    "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+  },
+  "results": [
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "dialogue-parser",
+          "trial_id": "dialogue-parser__agentbeats__1356f341",
+          "task_set": "agentbeats-real-model-smoke-v1",
+          "task_set_digest": "sha256:223a8593c43bb4e98f49fad889e0dacd98ef01f9e3a7462d2fc6b782a0a991d5",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": true,
+          "reward": 0.167,
+          "max_score": 1.0,
+          "time_used": 245.838,
+          "task_digest": "sha256:4d48e3b0e7146cb3596bf3f56f9d37cecab57fcbb32058f229e5401182cd191d",
+          "category": "software-engineering",
+          "difficulty": "easy",
+          "tags": [
+            "game development",
+            "parsing"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    }
+  ]
+}
