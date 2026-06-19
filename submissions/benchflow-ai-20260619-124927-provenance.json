@@ -1,0 +1,22 @@
+{
+  "image_digests": {
+    "/agent_under_test": "ghcr.io/benchflow-ai/skillsbench-agentbeats-purple@sha256:4d4bd93affa845c46dce819e021ebd40aef8db00ae3072b0deb901edd3b86831",
+    "/gateway": "ghcr.io/rdi-foundation/agentbeats-gateway@sha256:3f9976889c598092dc4273312ec431cbc48bbe064ff65b5613425f4990bc1d4c",
+    "/skillsbench_green": "ghcr.io/benchflow-ai/skillsbench-agentbeats-worker@sha256:b07dc0a9c3f91de8ed2c583ed1124299440dc17f18f26306f83bd5edd48ece01"
+  },
+  "manifest_digests": {
+    "/": "sha256:EucUdUTT7emcF5oWkww94vo9faRxyOvxWZ2LUvmtn/4=",
+    "/agent_under_test": "sha256:lMGKjgX1BhUps51y/fQzkZ2R99Wd/Z7zz4FUm/s/9ys=",
+    "/gateway": "sha256:Ba99ymNGSymbrF9jGwLfnZaSnzPrw9sTJ5veaYMxV2Q=",
+    "/skillsbench_green": "sha256:2odMltsWDsI2Hx9IlDhLD5rH9cpBDauKUqCEJJiT5Qo="
+  },
+  "timestamp": "2026-06-19T12:42:36Z",
+  "github_actions": {
+    "run_url": "https://github.com/benchflow-ai/skillsbench-leaderboard/actions/runs/27826255462",
+    "ref": "refs/heads/main",
+    "sha": "5e742df8e1289921499210b957127dd77759eb4f",
+    "repository_url": "https://github.com/benchflow-ai/skillsbench-leaderboard",
+    "workflow_ref": "benchflow-ai/skillsbench-leaderboard/.github/workflows/run-scenario.yml@refs/heads/main",
+    "workflow_sha": "5e742df8e1289921499210b957127dd77759eb4f"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "status": "completed",
+  "participants": {
+    "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+  },
+  "results": [
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "jax-computing-basics",
+          "trial_id": "jax-computing-basics__agentbeats__5e6b942b",
+          "task_set": "predeploy-six-v1.1",
+          "task_set_digest": "sha256:873d8cffebb7a9c0c6fd688c15191a138e6f475644a9d840155c94106f9c030f",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 364.281,
+          "task_digest": "sha256:85f8adc808c68bfacd1fa06b17b91bb82b09aac0848c2ba55e512feb84137b35",
+          "category": "software-engineering",
+          "difficulty": "medium",
+          "tags": [
+            "jax-language",
+            "numerical-computing"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    }
+  ]
+}

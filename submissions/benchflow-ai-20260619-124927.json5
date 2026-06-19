@@ -1,0 +1,128 @@
+{
+  "manifest_version": "0.4.0",
+  "experimental_features": [
+    "docker"
+  ],
+  "config_schema": {
+    "type": "object",
+    "properties": {
+      "agent_under_test": {
+        "type": "object",
+        "properties": {
+          "harness": {
+            "type": "string",
+            "enum": [
+              "openhands",
+              "opencode",
+              "claude-code",
+              "codex",
+              "gemini-cli",
+              "terminus",
+              "pi"
+            ],
+            "default": "openhands"
+          },
+          "api_key": {
+            "type": "string",
+            "secret": true
+          },
+          "model": {
+            "type": "string",
+            "default": "gemini/gemini-3.5-flash"
+          },
+          "timeout_sec": {
+            "type": "integer",
+            "default": 900
+          }
+        },
+        "required": [
+          "api_key"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "agent_under_test"
+    ],
+    "additionalProperties": false
+  },
+  "components": {
+    "gateway": {
+      "manifest": "https://raw.githubusercontent.com/RDI-Foundation/agentbeats-gateway/refs/tags/v0.3/amber-manifest.json5",
+      "config": {
+        "assessment_config": {
+          "task_set": "predeploy-six-v1.1",
+          "condition": "with_skills",
+          "allow_excluded_tasks": false,
+          "shard_index": 0,
+          "num_shards": 1,
+          "task_ids": [
+            "jax-computing-basics",
+            "python-scala-translation",
+            "jpg-ocr-stat",
+            "grid-dispatch-operator",
+            "threejs-to-obj",
+            "data-to-d3"
+          ],
+          "num_instances": 1,
+          "participant_ids": {
+            "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+          }
+        },
+        "participant_roles": {
+          "green": "skillsbench_green",
+          "purple1": "agent"
+        }
+      }
+    },
+    "skillsbench_green": {
+      "manifest": "./green-agent.json5",
+      "config": {
+        "prebuilt_images": "{\"jax-computing-basics\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:798b9e069fccc19d0e28a985f681e9c37f1a67093c8bd3f67830c7f921e4091b\",\"python-scala-translation\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:003145e864aa523f5716e3dd1af1fc5843fb0280948d409b8a55d3285e4db16a\",\"jpg-ocr-stat\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:955e6187246bc603546c8b0ec72760ac8c55d411ecfd0dcd30a120474527062f\",\"grid-dispatch-operator\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:9a05d40ee8001cc5befaf61ed7b7810548c12ce0c82752e29f424a8a3f152141\",\"threejs-to-obj\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:cb8495e8147bc4ae0751bd36f7dfb83552eb1f74aad7e255f97c3b3f43fdf22d\",\"data-to-d3\":\"ghcr.io/benchflow-ai/skillsbench-task-env@sha256:4cebcdf0d152a1f3bee6548fd4d55d167f62ca9cc035bab17b75ca5fbc56897c\"}",
+        "require_durable_private_proof": true,
+        "private_proof_uri_prefix": "s3://agentbeats-private-proof/agentbeats-deepseek4flash-jax-v1.1-terminal-align-20260619",
+        "private_proof_retention": "90d"
+      }
+    },
+    "agent_under_test": {
+      "manifest": "./participant-agent-under-test.json5",
+      "config": {
+        "harness": "${config.agent_under_test.harness}",
+        "api_key": "${config.agent_under_test.api_key}",
+        "model": "${config.agent_under_test.model}",
+        "timeout_sec": "${config.agent_under_test.timeout_sec}"
+      }
+    }
+  },
+  "bindings": [
+    {
+      "to": "#gateway.green",
+      "from": "#skillsbench_green.a2a"
+    },
+    {
+      "to": "#gateway.purple1",
+      "from": "#agent_under_test.a2a"
+    },
+    {
+      "to": "#skillsbench_green.proxy",
+      "from": "#gateway.proxy",
+      "weak": true
+    }
+  ],
+  "exports": {
+    "results": "#gateway.results",
+    "participant_proxy": "#gateway.proxy"
+  },
+  "metadata": {
+    "agentbeats_ids": {
+      "skillsbench_green": "019e5799-3aca-7d20-ba8c-2b0bc785ac62",
+      "agent": "",
+      "agent_under_test": "",
+      "baseline_agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+    },
+    "worker_mode": "embedded_green_worker",
+    "task_set": "predeploy-six-v1.1",
+    "runtime_first": true,
+    "num_shards": 1
+  }
+}
