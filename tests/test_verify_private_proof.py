@@ -52,6 +52,19 @@ class VerifyPrivateProofTests(unittest.TestCase):
 
         self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
 
+    def test_accepts_returned_file_only_a2a_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=self._returned_file_a2a_trajectory())
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["citation-check"],
+            )
+
+        self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
+
     def test_rejects_zero_event_a2a_evidence(self) -> None:
         trajectory = self._active_a2a_trajectory(event_count=0)
         with tempfile.TemporaryDirectory() as tmp:
@@ -86,7 +99,7 @@ class VerifyPrivateProofTests(unittest.TestCase):
             root = Path(tmp)
             manifest = self._write_bundle(root, a2a_trajectory=trajectory)
 
-            with self.assertRaisesRegex(verify_module.ProofError, "sandbox_context"):
+            with self.assertRaisesRegex(verify_module.ProofError, "returned-file evidence"):
                 verify_module.verify_private_proofs(
                     manifest_path=manifest,
                     proof_root=root / "downloaded",
@@ -307,6 +320,51 @@ class VerifyPrivateProofTests(unittest.TestCase):
                 "turn": 1,
                 "action": {"action": "exec", "cmd": "cat /root/test.bib", "timeout_sec": 30},
                 "observation": {"ok": True, "return_code": 0, "stdout": "@article{fake}\n", "stderr": ""},
+            },
+        ]
+
+    @staticmethod
+    def _returned_file_a2a_trajectory(*, event_count: int = 46, returned_file_count: int = 4) -> list[dict[str, object]]:
+        return [
+            {"type": "user_message", "text": "solve dialogue-parser"},
+            {
+                "type": "a2a_request",
+                "turn": 1,
+                "text": json.dumps(
+                    {
+                        "kind": "task",
+                        "protocol": "terminal-bench-shell-v1",
+                        "instruction": "solve dialogue-parser",
+                    }
+                ),
+            },
+            {
+                "type": "a2a_response",
+                "turn": 1,
+                "agent_under_test_receipt": {
+                    "agent_under_test": True,
+                    "participant_run_id": "purple-1",
+                    "harness": "openhands",
+                    "model": "deepseek/deepseek-v4-flash",
+                    "provider": "deepseek",
+                    "api_key_present": True,
+                    "exit_code": 0,
+                    "event_count": event_count,
+                    "returned_file_count": returned_file_count,
+                },
+            },
+            {
+                "type": "returned_files",
+                "uploaded": [
+                    {
+                        "path": "/app/solution.py",
+                        "target_path": "/app/solution.py",
+                        "bytes": 123,
+                        "sha256": "a" * 64,
+                        "media_type": "text/x-python",
+                    }
+                ],
+                "skipped": [],
             },
         ]
 

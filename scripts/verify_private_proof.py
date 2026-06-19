@@ -7,7 +7,7 @@ import argparse
 import json
 import sys
 from collections.abc import Sequence
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 REQUIRED_ROW_FIELDS = (
@@ -262,8 +262,16 @@ def _verify_a2a_evidence(path: Path, *, task_id: str) -> None:
             raise ProofError(f"{path}: task {task_id} has no receipt with event_count > 0")
         return
 
+    if _has_returned_file_a2a_evidence(events):
+        if not any(_active_receipt_with_returned_files(receipt) for receipt in receipts):
+            raise ProofError(
+                f"{path}: task {task_id} has no receipt with event_count > 0 and returned_file_count > 0"
+            )
+        return
+
     raise ProofError(
-        f"{path}: task {task_id} has neither sandbox_context file evidence nor terminal-bench-shell-v1 exec evidence"
+        f"{path}: task {task_id} has neither sandbox_context file evidence, "
+        "terminal-bench-shell-v1 exec evidence, nor returned-file evidence"
     )
 
 
@@ -292,6 +300,37 @@ def _has_terminal_protocol_a2a_evidence(events: Sequence[Any]) -> bool:
         and event["action"]["cmd"].strip()
         for event in events
     )
+
+
+def _has_returned_file_a2a_evidence(events: Sequence[Any]) -> bool:
+    return any(
+        isinstance(event, dict)
+        and event.get("type") == "returned_files"
+        and _has_uploaded_file_evidence(event.get("uploaded"))
+        for event in events
+    )
+
+
+def _has_uploaded_file_evidence(value: Any) -> bool:
+    if not isinstance(value, list):
+        return False
+    return any(_is_uploaded_file_evidence(item) for item in value)
+
+
+def _is_uploaded_file_evidence(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    target_path = value.get("target_path")
+    if not isinstance(target_path, str) or not target_path.startswith("/"):
+        return False
+    target = PurePosixPath(target_path)
+    if ".." in target.parts:
+        return False
+    bytes_value = value.get("bytes")
+    if not _positive_number(bytes_value):
+        return False
+    sha256 = value.get("sha256")
+    return isinstance(sha256, str) and len(sha256) == 64 and all(char in "0123456789abcdef" for char in sha256.lower())
 
 
 def _is_terminal_task_request(event: Any) -> bool:
