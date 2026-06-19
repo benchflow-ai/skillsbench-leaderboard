@@ -103,6 +103,26 @@ class VerifyPrivateProofTests(unittest.TestCase):
             with self.assertRaises(verify_module.ProofError):
                 verify_module.verify_private_proofs(manifest_path=manifest, proof_root=root / "downloaded")
 
+    def test_accepts_non_scoreable_infra_failure_without_verifier_reward(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root)
+            self._rewrite_as_infra_failure_without_reward(root)
+
+            summary = verify_module.verify_private_proofs(manifest_path=manifest, proof_root=root / "downloaded")
+
+        self.assertEqual(summary["proof_count"], 1)
+        self.assertEqual(summary["proofs"][0]["copied_artifact_count"], 5)
+
+    def test_rejects_non_scoreable_infra_failure_missing_diagnostic(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root)
+            self._rewrite_as_infra_failure_without_reward(root, include_diagnostic=False)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "infra_failure.json"):
+                verify_module.verify_private_proofs(manifest_path=manifest, proof_root=root / "downloaded")
+
     def test_rejects_invalid_jsonl_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -143,6 +163,37 @@ class VerifyPrivateProofTests(unittest.TestCase):
         proof_dir.mkdir(parents=True, exist_ok=True)
         (proof_dir / "proof.json").write_text(json.dumps(self._proof(proof_id)))
         return manifest_path
+
+    def _rewrite_as_infra_failure_without_reward(self, root: Path, *, include_diagnostic: bool = True) -> None:
+        proof_dir = root / "downloaded" / "proof-123"
+        task_dir = proof_dir / "artifacts" / "citation-check"
+        (task_dir / "verifier" / "reward.txt").unlink()
+        if include_diagnostic:
+            (task_dir / "infra_failure.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "skillsbench.agentbeats.infra_failure.v1",
+                        "task_id": "citation-check",
+                        "trial_id": "citation-check__agentbeats__12345678",
+                        "score_eligible": False,
+                        "passed": False,
+                        "reward": 0.0,
+                        "infra_failure_type": "participant_timeout",
+                        "error_type": "participant_timeout",
+                        "source": "public_row",
+                    }
+                )
+            )
+        proof = json.loads((proof_dir / "proof.json").read_text())
+        proof["public_rows"][0]["score_eligible"] = False
+        proof["public_rows"][0]["infra_failure_type"] = "participant_timeout"
+        proof["public_rows"][0]["error_type"] = "participant_timeout"
+        proof["copied_artifacts"] = [
+            artifact for artifact in proof["copied_artifacts"] if artifact["relative_path"] != "verifier/reward.txt"
+        ]
+        if include_diagnostic:
+            proof["copied_artifacts"].append({"task_id": "citation-check", "relative_path": "infra_failure.json"})
+        (proof_dir / "proof.json").write_text(json.dumps(proof))
 
     @staticmethod
     def _proof(proof_id: str) -> dict[str, object]:

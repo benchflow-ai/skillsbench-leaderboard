@@ -20,13 +20,14 @@ REQUIRED_ROW_FIELDS = (
     "infra_failure_type",
     "error_type",
 )
-REQUIRED_TASK_ARTIFACTS = (
+BASE_REQUIRED_TASK_ARTIFACTS = (
     "agent/agentbeats_a2a.txt",
     "result.json",
     "trajectory/acp_trajectory.jsonl",
     "trajectory/a2a_trajectory.jsonl",
-    "verifier/reward.txt",
 )
+VERIFIER_REWARD_ARTIFACT = "verifier/reward.txt"
+INFRA_FAILURE_ARTIFACT = "infra_failure.json"
 
 
 class ProofError(Exception):
@@ -106,15 +107,20 @@ def _verify_proof(
     rows = proof.get("public_rows")
     if not isinstance(rows, list) or not rows:
         raise ProofError(f"{path}: public_rows must be a non-empty list")
-    task_ids = _validate_rows(path, rows)
+    rows_by_task = _validate_rows(path, rows)
 
     artifacts = proof.get("copied_artifacts")
     if not isinstance(artifacts, list) or not artifacts:
         raise ProofError(f"{path}: copied_artifacts must be a non-empty list")
     artifacts_by_task = _validate_artifacts(path, proof_id=proof_id, artifacts=artifacts)
-    for task_id in task_ids:
+    for task_id, row in rows_by_task.items():
         rels = artifacts_by_task.get(task_id, set())
-        missing = [rel for rel in REQUIRED_TASK_ARTIFACTS if rel not in rels]
+        required = list(BASE_REQUIRED_TASK_ARTIFACTS)
+        if _row_requires_verifier_reward(row):
+            required.append(VERIFIER_REWARD_ARTIFACT)
+        else:
+            required.append(INFRA_FAILURE_ARTIFACT)
+        missing = [rel for rel in required if rel not in rels]
         if missing:
             raise ProofError(f"{path}: task {task_id} is missing required private artifact(s): {', '.join(missing)}")
         if task_id in require_a2a_evidence_tasks:
@@ -125,15 +131,15 @@ def _verify_proof(
         "task_set": proof["task_set"],
         "task_set_digest": proof["task_set_digest"],
         "public_row_count": len(rows),
-        "task_count": len(task_ids),
+        "task_count": len(rows_by_task),
         "copied_artifact_count": len(artifacts),
-        "a2a_evidence_task_count": len(task_ids & require_a2a_evidence_tasks),
-        "task_ids_sha256": _sha256_text("\n".join(sorted(task_ids))),
+        "a2a_evidence_task_count": len(set(rows_by_task) & require_a2a_evidence_tasks),
+        "task_ids_sha256": _sha256_text("\n".join(sorted(rows_by_task))),
     }
 
 
-def _validate_rows(path: Path, rows: list[Any]) -> set[str]:
-    task_ids: set[str] = set()
+def _validate_rows(path: Path, rows: list[Any]) -> dict[str, dict[str, Any]]:
+    rows_by_task: dict[str, dict[str, Any]] = {}
     for index, row in enumerate(rows):
         if not isinstance(row, dict):
             raise ProofError(f"{path}: public_rows[{index}] must be an object")
@@ -153,8 +159,16 @@ def _validate_rows(path: Path, rows: list[Any]) -> set[str]:
             raise ProofError(f"{path}: public_rows[{index}].reward must be numeric")
         if row["time_used"] is not None and not isinstance(row["time_used"], int | float):
             raise ProofError(f"{path}: public_rows[{index}].time_used must be numeric or null")
-        task_ids.add(task_id)
-    return task_ids
+        if row["score_eligible"] is False and (not isinstance(row["infra_failure_type"], str) or not row["infra_failure_type"]):
+            raise ProofError(f"{path}: public_rows[{index}].infra_failure_type is required for non-scoreable rows")
+        if row["score_eligible"] is True and row["infra_failure_type"] is not None:
+            raise ProofError(f"{path}: public_rows[{index}].infra_failure_type must be null for scoreable rows")
+        rows_by_task[task_id] = row
+    return rows_by_task
+
+
+def _row_requires_verifier_reward(row: dict[str, Any]) -> bool:
+    return row["score_eligible"] is True or not isinstance(row["infra_failure_type"], str) or not row["infra_failure_type"]
 
 
 def _validate_artifacts(path: Path, *, proof_id: str, artifacts: list[Any]) -> dict[str, set[str]]:
@@ -171,6 +185,8 @@ def _validate_artifacts(path: Path, *, proof_id: str, artifacts: list[Any]) -> d
             _require_parseable_jsonl(artifact_path)
         elif relative_path.endswith(".json"):
             _load_json(artifact_path)
+            if relative_path == INFRA_FAILURE_ARTIFACT:
+                _validate_infra_failure_artifact(artifact_path, task_id=task_id)
         elif relative_path == "agent/agentbeats_a2a.txt":
             text = artifact_path.read_text(errors="replace")
             if "[agentbeats-a2a]" not in text:
@@ -180,6 +196,20 @@ def _validate_artifacts(path: Path, *, proof_id: str, artifacts: list[Any]) -> d
     if path.parent.name != proof_id:
         raise ProofError(f"{path}: downloaded proof directory name does not match proof_id")
     return artifacts_by_task
+
+
+def _validate_infra_failure_artifact(path: Path, *, task_id: str) -> None:
+    payload = _load_json(path)
+    if not isinstance(payload, dict):
+        raise ProofError(f"{path}: infra_failure.json must be a JSON object")
+    if payload.get("schema_version") != "skillsbench.agentbeats.infra_failure.v1":
+        raise ProofError(f"{path}: unsupported infra_failure.json schema_version")
+    if payload.get("task_id") != task_id:
+        raise ProofError(f"{path}: infra_failure.json task_id does not match artifact task")
+    if payload.get("score_eligible") is not False:
+        raise ProofError(f"{path}: infra_failure.json score_eligible must be false")
+    if not isinstance(payload.get("infra_failure_type"), str) or not payload["infra_failure_type"]:
+        raise ProofError(f"{path}: infra_failure.json infra_failure_type must be non-empty")
 
 
 def _require_parseable_jsonl(path: Path) -> None:
