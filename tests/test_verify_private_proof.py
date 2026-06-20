@@ -69,6 +69,37 @@ class VerifyPrivateProofTests(unittest.TestCase):
 
         self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
 
+    def test_rejects_terminal_protocol_a2a_evidence_without_response_event(self) -> None:
+        trajectory = [
+            event for event in self._terminal_protocol_a2a_trajectory() if event["type"] != "a2a_response"
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "no agent-under-test A2A response receipt"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
+    def test_rejects_terminal_protocol_a2a_evidence_without_exec_observation(self) -> None:
+        trajectory = self._terminal_protocol_a2a_trajectory()
+        for event in trajectory:
+            if event["type"] == "terminal_observation":
+                event["action"] = {"action": "final", "cmd": "cat /root/test.bib"}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "terminal-bench-shell-v1 exec evidence"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
     def test_accepts_returned_file_only_a2a_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

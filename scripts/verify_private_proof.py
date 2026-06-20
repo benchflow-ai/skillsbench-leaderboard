@@ -292,13 +292,35 @@ def _has_sandbox_file_a2a_evidence(events: Sequence[Any]) -> bool:
 
 
 def _has_terminal_protocol_a2a_evidence(events: Sequence[Any]) -> bool:
-    return any(_is_terminal_task_request(event) for event in events) and any(
-        isinstance(event, dict)
-        and event.get("type") == "terminal_observation"
-        and isinstance(event.get("action"), dict)
-        and isinstance(event["action"].get("cmd"), str)
-        and event["action"]["cmd"].strip()
+    task_turns = {
+        event["turn"]
         for event in events
+        if _is_terminal_task_request(event) and isinstance(event.get("turn"), int)
+    }
+    response_turns = {
+        event["turn"]
+        for event in events
+        if isinstance(event, dict)
+        and event.get("type") == "a2a_response"
+        and isinstance(event.get("turn"), int)
+    }
+    exec_turns = {
+        event["turn"]
+        for event in events
+        if _is_terminal_exec_observation(event) and isinstance(event.get("turn"), int)
+    }
+    return bool(task_turns & response_turns & exec_turns)
+
+
+def _is_terminal_exec_observation(event: Any) -> bool:
+    if not isinstance(event, dict) or event.get("type") != "terminal_observation":
+        return False
+    action = event.get("action")
+    return (
+        isinstance(action, dict)
+        and action.get("action") == "exec"
+        and isinstance(action.get("cmd"), str)
+        and bool(action["cmd"].strip())
     )
 
 
