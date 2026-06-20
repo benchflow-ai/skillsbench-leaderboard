@@ -1,0 +1,7 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-deepseek4pro-citation-smoke-v1.1-proof-evidence-561d8bef-20260620-144745",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-citation-smoke-v1.1-proof-evidence-561d8bef-20260620-144745/1cf127208e1549e9a66b3629976f4ff2/proof.json"
+  ]
+}
