@@ -292,35 +292,40 @@ def _has_sandbox_file_a2a_evidence(events: Sequence[Any]) -> bool:
 
 
 def _has_terminal_protocol_a2a_evidence(events: Sequence[Any]) -> bool:
-    task_turns = {
-        event["turn"]
-        for event in events
-        if _is_terminal_task_request(event) and isinstance(event.get("turn"), int)
-    }
-    response_turns = {
-        event["turn"]
-        for event in events
-        if isinstance(event, dict)
-        and event.get("type") == "a2a_response"
-        and isinstance(event.get("turn"), int)
-    }
-    exec_turns = {
-        event["turn"]
-        for event in events
-        if _is_terminal_exec_observation(event) and isinstance(event.get("turn"), int)
-    }
-    return bool(task_turns & response_turns & exec_turns)
+    terminal_task_started = False
+    response_turns_after_task: set[int] = set()
+    for event in events:
+        if _is_terminal_task_request(event) and isinstance(event.get("turn"), int):
+            terminal_task_started = True
+            continue
+        if not terminal_task_started:
+            continue
+        if (
+            isinstance(event, dict)
+            and event.get("type") == "a2a_response"
+            and isinstance(event.get("turn"), int)
+        ):
+            response_turns_after_task.add(event["turn"])
+            continue
+        if (
+            _is_terminal_exec_observation(event)
+            and isinstance(event.get("turn"), int)
+            and event["turn"] in response_turns_after_task
+        ):
+            return True
+    return False
 
 
 def _is_terminal_exec_observation(event: Any) -> bool:
     if not isinstance(event, dict) or event.get("type") != "terminal_observation":
         return False
     action = event.get("action")
+    command = action.get("cmd", action.get("command")) if isinstance(action, dict) else None
     return (
         isinstance(action, dict)
         and action.get("action") == "exec"
-        and isinstance(action.get("cmd"), str)
-        and bool(action["cmd"].strip())
+        and isinstance(command, str)
+        and bool(command.strip())
     )
 
 

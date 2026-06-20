@@ -69,6 +69,53 @@ class VerifyPrivateProofTests(unittest.TestCase):
 
         self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
 
+    def test_accepts_terminal_protocol_a2a_evidence_after_initial_retry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=self._terminal_protocol_retry_a2a_trajectory())
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["citation-check"],
+            )
+
+        self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
+
+    def test_accepts_terminal_protocol_a2a_evidence_with_command_action_key(self) -> None:
+        trajectory = self._terminal_protocol_a2a_trajectory()
+        for event in trajectory:
+            if event["type"] == "terminal_observation":
+                event["action"] = {"action": "exec", "command": "cat /root/test.bib", "timeout_sec": 30}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["citation-check"],
+            )
+
+        self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
+
+    def test_rejects_terminal_protocol_exec_without_prior_task_request(self) -> None:
+        trajectory = [
+            event
+            for event in self._terminal_protocol_retry_a2a_trajectory()
+            if not (event.get("type") == "a2a_request" and event.get("turn") == 1)
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "terminal-bench-shell-v1 exec evidence"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
     def test_rejects_terminal_protocol_a2a_evidence_without_response_event(self) -> None:
         trajectory = [
             event for event in self._terminal_protocol_a2a_trajectory() if event["type"] != "a2a_response"
@@ -366,6 +413,65 @@ class VerifyPrivateProofTests(unittest.TestCase):
             {
                 "type": "terminal_observation",
                 "turn": 1,
+                "action": {"action": "exec", "cmd": "cat /root/test.bib", "timeout_sec": 30},
+                "observation": {"ok": True, "return_code": 0, "stdout": "@article{fake}\n", "stderr": ""},
+            },
+        ]
+
+    @staticmethod
+    def _terminal_protocol_retry_a2a_trajectory(*, event_count: int = 3) -> list[dict[str, object]]:
+        return [
+            {"type": "user_message", "text": "write /root/answer.json"},
+            {
+                "type": "a2a_request",
+                "turn": 1,
+                "text": json.dumps(
+                    {
+                        "kind": "task",
+                        "protocol": "terminal-bench-shell-v1",
+                        "instruction": "write /root/answer.json",
+                    }
+                ),
+            },
+            {
+                "type": "a2a_response",
+                "turn": 1,
+                "agent_under_test_receipt": None,
+            },
+            {
+                "type": "terminal_protocol_error",
+                "turn": 1,
+                "message": "Agent-under-test participant received the request.",
+            },
+            {
+                "type": "a2a_request",
+                "turn": 2,
+                "text": json.dumps(
+                    {
+                        "kind": "protocol_error",
+                        "protocol": "terminal-bench-shell-v1",
+                        "error": "last response was not an exact JSON exec_request or final object",
+                    }
+                ),
+            },
+            {
+                "type": "a2a_response",
+                "turn": 2,
+                "agent_under_test_receipt": {
+                    "agent_under_test": True,
+                    "participant_run_id": "purple-2",
+                    "harness": "openhands",
+                    "model": "deepseek/deepseek-v4-pro",
+                    "provider": "deepseek",
+                    "api_key_present": True,
+                    "exit_code": 0,
+                    "event_count": event_count,
+                    "returned_file_count": 0,
+                },
+            },
+            {
+                "type": "terminal_observation",
+                "turn": 2,
                 "action": {"action": "exec", "cmd": "cat /root/test.bib", "timeout_sec": 30},
                 "observation": {"ok": True, "return_code": 0, "stdout": "@article{fake}\n", "stderr": ""},
             },
