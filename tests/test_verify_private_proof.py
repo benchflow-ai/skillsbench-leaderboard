@@ -52,6 +52,23 @@ class VerifyPrivateProofTests(unittest.TestCase):
 
         self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
 
+    def test_accepts_terminal_protocol_a2a_evidence_without_response_receipt(self) -> None:
+        trajectory = [
+            {key: value for key, value in event.items() if key != "agent_under_test_receipt"}
+            for event in self._terminal_protocol_a2a_trajectory()
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root, a2a_trajectory=trajectory)
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["citation-check"],
+            )
+
+        self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
+
     def test_accepts_returned_file_only_a2a_evidence(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

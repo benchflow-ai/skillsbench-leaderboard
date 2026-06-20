@@ -247,6 +247,11 @@ def _verify_a2a_evidence(path: Path, *, task_id: str) -> None:
         if isinstance(event, dict) and event.get("type") == "a2a_response"
     ]
     receipts = [receipt for receipt in receipts if isinstance(receipt, dict)]
+    if _has_terminal_protocol_a2a_evidence(events):
+        if receipts and not any(_active_receipt(receipt) for receipt in receipts):
+            raise ProofError(f"{path}: task {task_id} has no receipt with event_count > 0")
+        return
+
     if not receipts:
         raise ProofError(f"{path}: task {task_id} has no agent-under-test A2A response receipt")
 
@@ -255,11 +260,6 @@ def _verify_a2a_evidence(path: Path, *, task_id: str) -> None:
             raise ProofError(
                 f"{path}: task {task_id} has no receipt with event_count > 0 and returned_file_count > 0"
             )
-        return
-
-    if _has_terminal_protocol_a2a_evidence(events):
-        if not any(_active_receipt(receipt) for receipt in receipts):
-            raise ProofError(f"{path}: task {task_id} has no receipt with event_count > 0")
         return
 
     if _has_returned_file_a2a_evidence(events):
