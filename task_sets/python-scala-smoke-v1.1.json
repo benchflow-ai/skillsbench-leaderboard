@@ -1,0 +1,23 @@
+{
+  "schema_version": "skillsbench.agentbeats.task_set.v1",
+  "task_set": "python-scala-smoke-v1.1",
+  "condition": "with_skills",
+  "allow_excluded_tasks": false,
+  "shard_index": 0,
+  "num_shards": 1,
+  "task_count": 1,
+  "tasks": [
+    {
+      "task_id": "python-scala-translation",
+      "task_digest": "sha256:d84a2aae85cce5480402fed5095a06495efa07a4ca458505171515d7707fc013",
+      "category": "software-engineering",
+      "difficulty": "medium",
+      "tags": [
+        "translation",
+        "scala",
+        "python"
+      ]
+    }
+  ],
+  "task_set_digest": "sha256:884eda797967ff7a0b768145ca9ad367dd9a84289f7db55509d3cf080a9b382a"
+}
