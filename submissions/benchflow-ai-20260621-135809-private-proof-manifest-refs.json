@@ -1,0 +1,18 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/2b14017d9d98488d8b85af4800ef56a7/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/4acb7ac6d59f4d0da575061c24b69b5c/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/6ce374f89da84b9fa31fd372db950d1a/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/6ea0e52b173b42b097e71f61c0b4f57d/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/b240921c94e54d2c9df7d5106f7fe480/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/b94eb20431ff402380115e1f1d459d53/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/c3108cc90a5142d3872f87e57811c3b1/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/c6332f42e0ce49f4bcac6d81fa783bac/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/d25b4e9470d943cebc23b223d3f395f1/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/d544efc60c0f434cbf8347263e31a57c/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/e194fca7f02548db9662e91abe1310f9/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-predeploy-six-v1.1-proofagg-034de08-20260621-132227/f15d93637088431a959229cde0d3c8a4/proof.json"
+  ]
+}

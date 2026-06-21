@@ -1,0 +1,214 @@
+{
+  "status": "completed",
+  "participants": {
+    "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+  },
+  "results": [
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "jax-computing-basics",
+          "trial_id": "jax-computing-basics__agentbeats__050279a2",
+          "task_set": "predeploy-six-v1.1",
+          "task_set_digest": "sha256:77c079e6d97caa6ec717b04e8790f1d72f1dd75690b55f26042824ad294ce3d5",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 900.831,
+          "task_digest": "sha256:85f8adc808c68bfacd1fa06b17b91bb82b09aac0848c2ba55e512feb84137b35",
+          "category": "software-engineering",
+          "difficulty": "medium",
+          "tags": [
+            "jax-language",
+            "numerical-computing"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    },
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "python-scala-translation",
+          "trial_id": "python-scala-translation__agentbeats__3ddea417",
+          "task_set": "predeploy-six-v1.1",
+          "task_set_digest": "sha256:b7b7ecfd405c3fa284dee2820019dd82e1ba24583784784f074081b22942c2bd",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 991.884,
+          "task_digest": "sha256:d84a2aae85cce5480402fed5095a06495efa07a4ca458505171515d7707fc013",
+          "category": "software-engineering",
+          "difficulty": "medium",
+          "tags": [
+            "translation",
+            "scala",
+            "python"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    },
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "jpg-ocr-stat",
+          "trial_id": "jpg-ocr-stat__agentbeats__fe41577e",
+          "task_set": "predeploy-six-v1.1",
+          "task_set_digest": "sha256:d512731cffb5047cc4a83f4dde800700404f88c8878be1bee8a18279004937bd",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 1856.489,
+          "task_digest": "sha256:7a6137d973f6ddd03ec7fbce9a11f95be9c8ca553efdf681e35d3a186184f968",
+          "category": "office-white-collar",
+          "difficulty": "hard",
+          "tags": [
+            "image ocr",
+            "data statistics"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    },
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "grid-dispatch-operator",
+          "trial_id": "grid-dispatch-operator__agentbeats__430dd773",
+          "task_set": "predeploy-six-v1.1",
+          "task_set_digest": "sha256:7fd2c7e5b77834f1a789b903a5fb8948bb6a9d8f304cf4867873124229f5a1d4",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 1909.629,
+          "task_digest": "sha256:60c5bca1ec15bdb2053dd672016f8153ce6e64c922f8b0fc0a73228ff24e25b4",
+          "category": "industrial-physical-systems",
+          "difficulty": "medium",
+          "tags": [
+            "energy",
+            "large-scale-energy-market-clearing",
+            "optimization",
+            "power-flow",
+            "dc-opf"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    },
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "threejs-to-obj",
+          "trial_id": "threejs-to-obj__agentbeats__4d28ee66",
+          "task_set": "predeploy-six-v1.1",
+          "task_set_digest": "sha256:ddb075163b485f5ba62f9cfe4c37b1b26ada954592326f29e407bbde296cffda",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 960.415,
+          "task_digest": "sha256:a6685ad8902228229c50d82684f0600fbc9a387f96e19378b4bfc8de150ff268",
+          "category": "media-content-production",
+          "difficulty": "medium",
+          "tags": [
+            "threejs",
+            "obj",
+            "3d",
+            "node",
+            "javascript"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    },
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "data-to-d3",
+          "trial_id": "data-to-d3__agentbeats__b8e4f9bb",
+          "task_set": "predeploy-six-v1.1",
+          "task_set_digest": "sha256:6367c8a38199317b807f81a0924f8047e6365b587de2edfe936512678e9b3cc4",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 1876.585,
+          "task_digest": "sha256:6bd955ce55b21352a441a5706b0e3faaad42b37891145e614b27387f44d38808",
+          "category": "software-engineering",
+          "difficulty": "medium",
+          "tags": [
+            "d3.js",
+            "data-visualization",
+            "interactive-charts"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    }
+  ]
+}
