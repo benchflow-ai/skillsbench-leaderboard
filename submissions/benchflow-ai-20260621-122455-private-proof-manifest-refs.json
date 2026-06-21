@@ -1,0 +1,8 @@
+{
+  "private_proof_storage": "s3://agentbeats-private-proof/agentbeats-deepseek4pro-python-scala-v1.1-receiptfix-2493d9fa-20260621-120506",
+  "private_proof_retention": "90d",
+  "private_proof_manifest_refs": [
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-python-scala-v1.1-receiptfix-2493d9fa-20260621-120506/161826603c374911912e3cc6467fa944/proof.json",
+    "s3://agentbeats-private-proof/agentbeats-deepseek4pro-python-scala-v1.1-receiptfix-2493d9fa-20260621-120506/7709f677484c433b9a040b28afdcc9eb/proof.json"
+  ]
+}

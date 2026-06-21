@@ -1,0 +1,42 @@
+{
+  "status": "completed",
+  "participants": {
+    "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+  },
+  "results": [
+    {
+      "status": "completed",
+      "participants": {
+        "agent": "019e5799-ca68-7b33-b1a5-c97b92b6fda1"
+      },
+      "results": [
+        {
+          "task_id": "python-scala-translation",
+          "trial_id": "python-scala-translation__agentbeats__63fadbc0",
+          "task_set": "python-scala-smoke-v1.1",
+          "task_set_digest": "sha256:51c84dbfefba4645f603b8dcaaf71650fa41d64337cac921f435b99180f7a623",
+          "condition": "with_skills",
+          "score_eligible": true,
+          "passed": false,
+          "reward": 0.0,
+          "max_score": 1.0,
+          "time_used": 991.427,
+          "task_digest": "sha256:d84a2aae85cce5480402fed5095a06495efa07a4ca458505171515d7707fc013",
+          "category": "software-engineering",
+          "difficulty": "medium",
+          "tags": [
+            "translation",
+            "scala",
+            "python"
+          ],
+          "has_skills": true,
+          "agent_transport": "a2a",
+          "participant_role": "agent",
+          "infra_failure_type": null,
+          "error_type": null,
+          "artifact_refs": []
+        }
+      ]
+    }
+  ]
+}
