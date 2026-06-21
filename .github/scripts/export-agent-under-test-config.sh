@@ -63,7 +63,7 @@ provider_requires_specific_key() {
 
 agent_harness="${AGENT_HARNESS:-openhands}"
 agent_model="${AGENT_MODEL:-gemini/gemini-3.5-flash}"
-agent_timeout_sec="${AGENT_TIMEOUT_SEC:-900}"
+agent_timeout_sec="${AGENT_TIMEOUT_SEC:-1800}"
 selected_key=""
 selected_key_source=""
 

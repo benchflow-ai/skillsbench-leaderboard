@@ -55,7 +55,7 @@ on:
         type: string
       agent_timeout_sec:
         description: "Agent-under-test timeout in seconds"
-        default: "900"
+        default: "1800"
         type: string
 
 env:
@@ -161,7 +161,7 @@ jobs:
           HUNYUAN_API_KEY: ${{ secrets.AGENT_UNDER_TEST__HUNYUAN_API_KEY || secrets.HUNYUAN_API_KEY || '' }}
           AGENT_HARNESS: ${{ inputs.agent_harness || 'openhands' }}
           AGENT_MODEL: ${{ inputs.agent_model || 'gemini/gemini-3.5-flash' }}
-          AGENT_TIMEOUT_SEC: ${{ inputs.agent_timeout_sec || '900' }}
+          AGENT_TIMEOUT_SEC: ${{ inputs.agent_timeout_sec || '1800' }}
         run: .github/scripts/export-agent-under-test-config.sh
 
       - name: Patch shard config into scenario
