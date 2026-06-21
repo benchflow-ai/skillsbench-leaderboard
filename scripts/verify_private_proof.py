@@ -55,7 +55,10 @@ def verify_private_proofs(
     if len(proof_files) != len(refs):
         raise ProofError(f"expected {len(refs)} downloaded proof.json file(s), found {len(proof_files)}")
 
+    required_a2a_evidence_tasks = set(require_a2a_evidence_tasks)
     summaries: list[dict[str, Any]] = []
+    evidence_satisfied_tasks: set[str] = set()
+    last_evidence_error_by_task: dict[str, str] = {}
     for ref in refs:
         if not ref.startswith(storage.rstrip("/") + "/"):
             raise ProofError(f"proof ref is outside private_proof_storage: {ref}")
@@ -65,14 +68,28 @@ def verify_private_proofs(
         matches = [path for path in proof_files if path.parent.name == proof_id]
         if len(matches) != 1:
             raise ProofError(f"expected one downloaded proof.json for proof_id {proof_id}, found {len(matches)}")
-        summaries.append(
-            _verify_proof(
-                matches[0],
-                proof_id=proof_id,
-                retention=retention,
-                require_a2a_evidence_tasks=set(require_a2a_evidence_tasks),
-            )
+        summary = _verify_proof(
+            matches[0],
+            proof_id=proof_id,
+            retention=retention,
+            require_a2a_evidence_tasks=required_a2a_evidence_tasks,
         )
+        for check in summary.pop("_a2a_evidence_checks", []):
+            task_id = check["task_id"]
+            error = check["error"]
+            if error is None:
+                evidence_satisfied_tasks.add(task_id)
+                continue
+            if check["fatal"]:
+                raise ProofError(error)
+            last_evidence_error_by_task[task_id] = error
+        summaries.append(summary)
+
+    # Shard verification receives the full task set but each shard only downloads
+    # proof rows for its assigned task(s), so absent required tasks are ignored.
+    for task_id in sorted(last_evidence_error_by_task):
+        if task_id not in evidence_satisfied_tasks:
+            raise ProofError(last_evidence_error_by_task[task_id])
 
     return {"proof_count": len(summaries), "proofs": summaries}
 
@@ -113,6 +130,8 @@ def _verify_proof(
     if not isinstance(artifacts, list) or not artifacts:
         raise ProofError(f"{path}: copied_artifacts must be a non-empty list")
     artifacts_by_task = _validate_artifacts(path, proof_id=proof_id, artifacts=artifacts)
+    a2a_evidence_checks: list[dict[str, Any]] = []
+    a2a_evidence_task_count = 0
     for task_id, row in rows_by_task.items():
         rels = artifacts_by_task.get(task_id, set())
         required = list(BASE_REQUIRED_TASK_ARTIFACTS)
@@ -124,7 +143,13 @@ def _verify_proof(
         if missing:
             raise ProofError(f"{path}: task {task_id} is missing required private artifact(s): {', '.join(missing)}")
         if task_id in require_a2a_evidence_tasks:
-            _verify_a2a_evidence(path.parent / "artifacts" / task_id / "trajectory" / "a2a_trajectory.jsonl", task_id=task_id)
+            check = _a2a_evidence_check(
+                path.parent / "artifacts" / task_id / "trajectory" / "a2a_trajectory.jsonl",
+                task_id=task_id,
+            )
+            a2a_evidence_checks.append({"task_id": task_id, **check})
+            if check["error"] is None:
+                a2a_evidence_task_count += 1
 
     return {
         "proof_id": proof_id,
@@ -133,8 +158,9 @@ def _verify_proof(
         "public_row_count": len(rows),
         "task_count": len(rows_by_task),
         "copied_artifact_count": len(artifacts),
-        "a2a_evidence_task_count": len(set(rows_by_task) & require_a2a_evidence_tasks),
+        "a2a_evidence_task_count": a2a_evidence_task_count,
         "task_ids_sha256": _sha256_text("\n".join(sorted(rows_by_task))),
+        "_a2a_evidence_checks": a2a_evidence_checks,
     }
 
 
@@ -238,7 +264,11 @@ def _load_jsonl(path: Path) -> list[Any]:
 
 def _verify_a2a_evidence(path: Path, *, task_id: str) -> None:
     events = _load_jsonl(path)
-    if any(isinstance(event, dict) and event.get("type") == "a2a_error" for event in events):
+    _verify_a2a_evidence_events(path, task_id=task_id, events=events)
+
+
+def _verify_a2a_evidence_events(path: Path, *, task_id: str, events: Sequence[Any]) -> None:
+    if _has_a2a_error_event(events):
         raise ProofError(f"{path}: task {task_id} contains an a2a_error event")
 
     receipts = [
@@ -273,6 +303,20 @@ def _verify_a2a_evidence(path: Path, *, task_id: str) -> None:
         f"{path}: task {task_id} has neither sandbox_context file evidence, "
         "terminal-bench-shell-v1 exec evidence, nor returned-file evidence"
     )
+
+
+def _a2a_evidence_check(path: Path, *, task_id: str) -> dict[str, str | bool | None]:
+    events = _load_jsonl(path)
+    fatal = _has_a2a_error_event(events)
+    try:
+        _verify_a2a_evidence_events(path, task_id=task_id, events=events)
+    except ProofError as exc:
+        return {"error": str(exc), "fatal": fatal}
+    return {"error": None, "fatal": False}
+
+
+def _has_a2a_error_event(events: Sequence[Any]) -> bool:
+    return any(isinstance(event, dict) and event.get("type") == "a2a_error" for event in events)
 
 
 def _has_sandbox_file_a2a_evidence(events: Sequence[Any]) -> bool:

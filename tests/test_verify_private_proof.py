@@ -39,6 +39,129 @@ class VerifyPrivateProofTests(unittest.TestCase):
 
         self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 1)
 
+    def test_accepts_required_a2a_evidence_across_multiple_proofs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proof_ids = ["proof-early", "proof-late"]
+            manifest = self._write_bundle(root, proof_id=proof_ids[0], manifest_proof_ids=proof_ids)
+            self._write_bundle(
+                root,
+                proof_id=proof_ids[1],
+                manifest_proof_ids=proof_ids,
+                a2a_trajectory=self._returned_file_a2a_trajectory(),
+            )
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["citation-check"],
+            )
+
+        self.assertEqual(summary["proof_count"], 2)
+        self.assertEqual([proof["proof_id"] for proof in summary["proofs"]], proof_ids)
+        self.assertEqual([proof["a2a_evidence_task_count"] for proof in summary["proofs"]], [0, 1])
+
+    def test_accepts_required_terminal_protocol_a2a_evidence_across_multiple_proofs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proof_ids = ["proof-early", "proof-late"]
+            manifest = self._write_bundle(root, proof_id=proof_ids[0], manifest_proof_ids=proof_ids)
+            self._write_bundle(
+                root,
+                proof_id=proof_ids[1],
+                manifest_proof_ids=proof_ids,
+                a2a_trajectory=self._terminal_protocol_a2a_trajectory(),
+            )
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["citation-check"],
+            )
+
+        self.assertEqual(summary["proof_count"], 2)
+        self.assertEqual([proof["proof_id"] for proof in summary["proofs"]], proof_ids)
+        self.assertEqual([proof["a2a_evidence_task_count"] for proof in summary["proofs"]], [0, 1])
+
+    def test_rejects_required_a2a_evidence_when_no_proof_has_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proof_ids = ["proof-early", "proof-late"]
+            manifest = self._write_bundle(root, proof_id=proof_ids[0], manifest_proof_ids=proof_ids)
+            self._write_bundle(root, proof_id=proof_ids[1], manifest_proof_ids=proof_ids)
+
+            with self.assertRaisesRegex(verify_module.ProofError, "A2A response receipt"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
+    def test_rejects_a2a_error_even_when_later_proof_has_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proof_ids = ["proof-early", "proof-late"]
+            trajectory = self._active_a2a_trajectory()
+            trajectory.insert(2, {"type": "a2a_error", "message": "participant failed"})
+            manifest = self._write_bundle(
+                root,
+                proof_id=proof_ids[0],
+                manifest_proof_ids=proof_ids,
+                a2a_trajectory=trajectory,
+            )
+            self._write_bundle(
+                root,
+                proof_id=proof_ids[1],
+                manifest_proof_ids=proof_ids,
+                a2a_trajectory=self._returned_file_a2a_trajectory(),
+            )
+
+            with self.assertRaisesRegex(verify_module.ProofError, "a2a_error"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
+    def test_rejects_later_a2a_error_even_when_earlier_proof_has_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proof_ids = ["proof-early", "proof-late"]
+            manifest = self._write_bundle(
+                root,
+                proof_id=proof_ids[0],
+                manifest_proof_ids=proof_ids,
+                a2a_trajectory=self._returned_file_a2a_trajectory(),
+            )
+            trajectory = self._active_a2a_trajectory()
+            trajectory.insert(2, {"type": "a2a_error", "message": "participant failed"})
+            self._write_bundle(
+                root,
+                proof_id=proof_ids[1],
+                manifest_proof_ids=proof_ids,
+                a2a_trajectory=trajectory,
+            )
+
+            with self.assertRaisesRegex(verify_module.ProofError, "a2a_error"):
+                verify_module.verify_private_proofs(
+                    manifest_path=manifest,
+                    proof_root=root / "downloaded",
+                    require_a2a_evidence_tasks=["citation-check"],
+                )
+
+    def test_ignores_required_a2a_evidence_task_absent_from_proof_rows(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            manifest = self._write_bundle(root)
+
+            summary = verify_module.verify_private_proofs(
+                manifest_path=manifest,
+                proof_root=root / "downloaded",
+                require_a2a_evidence_tasks=["other-shard-task"],
+            )
+
+        self.assertEqual(summary["proofs"][0]["a2a_evidence_task_count"], 0)
+
     def test_accepts_terminal_protocol_a2a_evidence_without_returned_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -253,19 +376,36 @@ class VerifyPrivateProofTests(unittest.TestCase):
             with self.assertRaises(verify_module.ProofError):
                 verify_module.verify_private_proofs(manifest_path=manifest, proof_root=root / "downloaded")
 
-    def _write_bundle(self, root: Path, *, a2a_trajectory: list[dict[str, object]] | None = None) -> Path:
-        proof_id = "proof-123"
+    def _write_bundle(
+        self,
+        root: Path,
+        *,
+        a2a_trajectory: list[dict[str, object]] | None = None,
+        proof_id: str = "proof-123",
+        manifest_proof_ids: list[str] | None = None,
+    ) -> Path:
         storage = "s3://agentbeats-private-proof/run"
+        proof_ids = manifest_proof_ids if manifest_proof_ids is not None else [proof_id]
         manifest_path = root / "refs.json"
         manifest_path.write_text(
             json.dumps(
                 {
                     "private_proof_storage": storage,
                     "private_proof_retention": "90d",
-                    "private_proof_manifest_refs": [f"{storage}/{proof_id}/proof.json"],
+                    "private_proof_manifest_refs": [f"{storage}/{item}/proof.json" for item in proof_ids],
                 }
             )
         )
+        self._write_proof_bundle(root, proof_id=proof_id, a2a_trajectory=a2a_trajectory)
+        return manifest_path
+
+    def _write_proof_bundle(
+        self,
+        root: Path,
+        *,
+        proof_id: str,
+        a2a_trajectory: list[dict[str, object]] | None = None,
+    ) -> None:
         proof_dir = root / "downloaded" / proof_id
         task_dir = proof_dir / "artifacts" / "citation-check"
         (task_dir / "agent").mkdir(parents=True)
@@ -283,7 +423,6 @@ class VerifyPrivateProofTests(unittest.TestCase):
         (task_dir / "verifier" / "reward.txt").write_text("0.0\n")
         proof_dir.mkdir(parents=True, exist_ok=True)
         (proof_dir / "proof.json").write_text(json.dumps(self._proof(proof_id)))
-        return manifest_path
 
     def _rewrite_as_infra_failure_without_reward(self, root: Path, *, include_diagnostic: bool = True) -> None:
         proof_dir = root / "downloaded" / "proof-123"
