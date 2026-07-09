@@ -2,12 +2,12 @@
   "schema_version": "skillsbench.agentbeats.sync_source.v1",
   "task_set": "skillsbench-v1.1",
   "source_repository": "benchflow-ai/skillsbench",
-  "source_ref": "codex/skillsbench-agentbeats-v1-1-update",
-  "source_sha": "ffc7b000b40aa8a9bed9091c95d700c0f83c1e63",
-  "workflow_run_url": "https://github.com/benchflow-ai/skillsbench/actions/runs/27652719005",
+  "source_ref": "main",
+  "source_sha": "44cdda48f6e8c4d381f4f5075c0f4a051ba69e98",
+  "workflow_run_url": "https://github.com/benchflow-ai/skillsbench/actions/runs/28969180948",
   "task_count": 87,
   "task_set_digest": "sha256:3c9432bb1a4bd1b66ddbc175bb1f43bf546f7de663d1b2aa0327a88bff7ecd39",
-  "prebuilt_images_included": true,
+  "prebuilt_images_included": false,
   "review_required": true,
   "active_public_task_sets_mutated": false
 }
